@@ -1,0 +1,28 @@
+error: This is a match for a simple pattern. Well Done!
+ --> $DIR/simple_pattern.rs:6:9
+  |
+6 |     if (false) {
+  |         ^^^^^
+  |
+  = note: #[forbid(simple_pattern)] on by default
+
+error: This is a match for a simple pattern. Well Done!
+  --> $DIR/simple_pattern.rs:10:13
+   |
+10 |     let a = ['b', 'c'];
+   |             ^^^^^^^^^^
+
+error: This is a match for a simple pattern. Well Done!
+  --> $DIR/simple_pattern.rs:11:13
+   |
+11 |     let b = ['b', 'b', 'c'];
+   |             ^^^^^^^^^^^^^^^
+
+error: This is a match for a simple pattern. Well Done!
+  --> $DIR/simple_pattern.rs:15:13
+   |
+15 |     let x = 0 as *const i32;    
+   |             ^^^^^^^^^^^^^^^
+
+error: aborting due to 4 previous errors
+
