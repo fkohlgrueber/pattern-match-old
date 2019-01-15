@@ -13,4 +13,20 @@ fn main() {
     
     // match cast
     let x = 0 as *const i32;    
+
+    // match if
+    let y = if true {
+        123
+    } else {
+        456
+    };
+    if true {
+        true;
+    }
+    let z = if true {
+        true;
+        12
+    }else {
+        34
+    };
 }

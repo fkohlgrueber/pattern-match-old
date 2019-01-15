@@ -38,6 +38,7 @@ impl EarlyLintPass for SimplePattern {
         use crate::pattern_tree::Expr::*;
         use crate::pattern_tree::Lit::*;
         use crate::pattern_tree::Ty::*;
+        use crate::pattern_tree::Stmt::*;
         use crate::matchers::IsMatch;
         
         let pattern = any!(
@@ -61,7 +62,10 @@ impl EarlyLintPass for SimplePattern {
                     Ptr(any!(Path(seq!(any!("i32".to_string()); 1))), any!(syntax::ast::Mutability::Immutable))
                 )
             ),
-            If(any!(), seq!(), any!())
+            If(any!(Lit(any!(Bool(any!(true))))), seq!(
+                any!(Expr(any!(Lit(any!(Int(any!())))))); ..,
+                any!(Semi(any!(Lit(any!(Bool(any!())))))); ..
+            ), any!())
         );
 
         if pattern.is_match(expr) {

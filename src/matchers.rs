@@ -56,7 +56,7 @@ where T: IsMatch<U> {
     fn is_match(&self, other: &&[&U]) -> bool {
         
         let iterators: Vec<_> = self.seq.iter().map(
-            |x| x.range.start..x.range.end.unwrap_or_else(|| other.len())
+            |x| x.range.start..x.range.end.unwrap_or_else(|| other.len()+1)
         ).multi_cartesian_product()
          .filter(|x| x.iter().sum::<usize>() == other.len())
          .collect();

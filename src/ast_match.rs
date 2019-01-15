@@ -27,7 +27,7 @@ impl IsMatch<ast::ExprKind> for Expr {
             (Expr::Cast(ie, ity), ast::ExprKind::Cast(je, jty)) => ie.is_match(&je.node) && ity.is_match(&jty.node),
             (Expr::If(i_check, i_then, i_else), ast::ExprKind::If(j_check, j_then, j_else)) => 
                 i_check.is_match(&j_check.node) && 
-                i_then.is_match(&j_then.stmts.iter().map(|x| x).collect::<Vec<_>>().as_slice()) && 
+                i_then.is_match(&j_then.stmts.iter().map(|x| x).collect::<Vec<_>>().as_slice()) &&   
                 i_else.is_match(j_else),
             _ => false,
         }
