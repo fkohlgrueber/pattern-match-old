@@ -60,7 +60,8 @@ impl EarlyLintPass for SimplePattern {
                 any!(
                     Ptr(any!(Path(seq!(any!("i32".to_string()); 1))), any!(syntax::ast::Mutability::Immutable))
                 )
-            )
+            ),
+            If(any!(), seq!(), any!())
         );
 
         if pattern.is_match(expr) {

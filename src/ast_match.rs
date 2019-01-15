@@ -25,6 +25,10 @@ impl IsMatch<ast::ExprKind> for Expr {
             (Expr::Lit(i), ast::ExprKind::Lit(j)) => i.is_match(&j.node),
             (Expr::Array(i), ast::ExprKind::Array(j)) => i.is_match(&j.iter().map(|x| &**x).collect::<Vec<_>>().as_slice()),
             (Expr::Cast(ie, ity), ast::ExprKind::Cast(je, jty)) => ie.is_match(&je.node) && ity.is_match(&jty.node),
+            (Expr::If(i_check, i_then, i_else), ast::ExprKind::If(j_check, j_then, j_else)) => 
+                i_check.is_match(&j_check.node) && 
+                i_then.is_match(&j_then.stmts.iter().map(|x| x).collect::<Vec<_>>().as_slice()) && 
+                i_else.is_match(j_else),
             _ => false,
         }
     }
@@ -49,6 +53,22 @@ impl IsMatch<ast::LitKind> for Lit {
     }
 }
 
+
+impl IsMatch<ast::StmtKind> for Stmt {
+    fn is_match(&self, other: &ast::StmtKind) -> bool {
+        match (self, other) {
+            (Stmt::Expr(i), ast::StmtKind::Expr(j)) => i.is_match(&j.node),
+            (Stmt::Semi(i), ast::StmtKind::Semi(j)) => i.is_match(&j.node),
+            _ => false,
+        }
+    }
+}
+
+impl IsMatch<ast::Stmt> for Stmt {
+    fn is_match(&self, other: &ast::Stmt) -> bool {
+        self.is_match(&other.node)
+    }
+}
 
 #[cfg(test)]
 mod tests {

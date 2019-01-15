@@ -1,10 +1,18 @@
 use crate::repeat::Repeat;
 use itertools::Itertools;
+use std::ops::Deref;
 
 pub trait IsMatch<Rhs = Self> {
     fn is_match(&self, other: &Rhs) -> bool;
 }
 
+pub trait IsMatchEquality: PartialEq {}
+
+impl IsMatchEquality for char {}
+impl IsMatchEquality for String {}
+impl IsMatchEquality for bool {}
+impl IsMatchEquality for u128 {}
+impl IsMatchEquality for syntax::ast::Mutability {}
 
 pub struct MatchValues<T> {
     pub values: Option<Vec<T>>,
@@ -12,9 +20,20 @@ pub struct MatchValues<T> {
 
 
 impl<T> IsMatch<T> for T
-where T: PartialEq {
+where T: IsMatchEquality {
     fn is_match(&self, other: &T) -> bool {
         self == other
+    }
+}
+
+impl<T, U, V> IsMatch<Option<V>> for Option<T> 
+where T: IsMatch<U>, V: Deref<Target=U> {
+    fn is_match(&self, other: &Option<V>) -> bool {
+        match (self, other) {
+            (Some(i), Some(j)) => i.is_match(j),
+            (None, None) => true,
+            _ => false
+        }
     }
 }
 
