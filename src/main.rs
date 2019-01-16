@@ -35,8 +35,6 @@ impl EarlyLintPass for CollapsibleIf {
     fn check_expr(&mut self, cx: &EarlyContext, expr: &syntax::ast::Expr) {
         
         use crate::pattern_tree::Expr::*;
-        use crate::pattern_tree::Lit::*;
-        use crate::pattern_tree::Ty::*;
         use crate::pattern_tree::Stmt::*;
         use crate::matchers::IsMatch;
         
@@ -79,19 +77,15 @@ impl EarlyLintPass for CollapsibleIf {
             );
         }
         if pattern2.is_match(expr) {
-            if let syntax::ast::ExprKind::If(_check, _then, Some(else_)) = &expr.node {
-                cx.span_lint(
-                    SIMPLE_PATTERN,
-                    else_.span,
-                    "this `else { if .. }` block can be collapsed",
-                );
-            }
-            if let syntax::ast::ExprKind::IfLet(_, _, _, Some(else_)) = &expr.node {
-                cx.span_lint(
-                    SIMPLE_PATTERN,
-                    else_.span,
-                    "this `else { if .. }` block can be collapsed",
-                );
+            match &expr.node {
+                syntax::ast::ExprKind::If(_, _, Some(else_)) | syntax::ast::ExprKind::IfLet(_, _, _, Some(else_)) => {
+                    cx.span_lint(
+                        SIMPLE_PATTERN,
+                        else_.span,
+                        "this `else { if .. }` block can be collapsed",
+                    );
+                },
+                _ => ()
             }
         }
         
