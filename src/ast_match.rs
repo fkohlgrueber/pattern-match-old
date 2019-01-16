@@ -29,6 +29,10 @@ impl IsMatch<ast::ExprKind> for Expr {
                 i_check.is_match(&j_check.node) && 
                 i_then.is_match(&j_then.stmts.iter().map(|x| x).collect::<Vec<_>>().as_slice()) &&   
                 i_else.is_match(j_else),
+            (Expr::Block(i), ast::ExprKind::Block(j, _label)) => i.is_match(&j.stmts.iter().map(|x| x).collect::<Vec<_>>().as_slice()),
+            (Expr::IfLet(i_block, i_else), ast::ExprKind::IfLet(_pattern, _check, j_block, j_else)) => // TODO: also check pattern and expr
+                i_block.is_match(&j_block.stmts.iter().map(|x| x).collect::<Vec<_>>().as_slice()) && 
+                i_else.is_match(j_else),
             _ => false,
         }
     }

@@ -14,6 +14,7 @@ impl IsMatchEquality for bool {}
 impl IsMatchEquality for u128 {}
 impl IsMatchEquality for syntax::ast::Mutability {}
 
+#[derive(Clone)]
 pub struct MatchValues<T> {
     pub values: Option<Vec<T>>,
 }
@@ -47,6 +48,7 @@ where T: IsMatch<U> {
     }
 }
 
+#[derive(Clone)]
 pub struct MatchSequences<T> {
     pub seq: Vec<Repeat<T>>
 }

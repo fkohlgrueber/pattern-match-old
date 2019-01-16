@@ -1,7 +1,7 @@
 
 use std::ops::{Range, RangeFrom, RangeFull, RangeInclusive, RangeTo, RangeToInclusive};
 
-#[derive(PartialEq, Debug)]
+#[derive(PartialEq, Debug, Clone, Copy)]
 pub struct RepeatRange {
     pub start: usize,
     pub end: Option<usize>  // exclusive
@@ -71,7 +71,7 @@ impl From<usize> for RepeatRange {
     }
 }
 
-
+#[derive(Clone, Copy)]
 pub struct Repeat<T> {
     pub elmt: T,
     pub range: RepeatRange,
