@@ -121,22 +121,6 @@ where T: IsMatch<U> {
     }
 }
 
-pub struct MatchNamed<T> {
-    pub elmt: T,
-    pub ident: String
-}
-
-impl<T, U> IsMatch<U> for MatchNamed<T>
-where T: IsMatch<U> {
-    fn is_match(&self, other: &U) -> Option<MatchResult> {
-        
-        if let Some(mut res) = self.elmt.is_match(&other) {
-            res.names.insert(self.ident.clone(), format!("info for {}", self.ident).to_string());
-            return Some(res);
-        }
-        None
-    }
-}
 /*
 #[cfg(test)]
 mod tests {
