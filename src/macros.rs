@@ -2,12 +2,19 @@
 
 macro_rules! any {
     () => {
-        crate::matchers::MatchValues { values: None }
+        crate::matchers::MatchValues { values: None, name: None }
     };
     ( $( $element:expr ) , * ) => {
         {
             crate::matchers::MatchValues { 
-                values: Some( vec!($($element ,)*) )
+                values: Some( vec!($($element ,)*) ), name: None
+            }
+        }
+    };
+    ( $( $element:expr ) , * ; $name:expr ) => {
+        {
+            crate::matchers::MatchValues { 
+                values: Some( vec!($($element ,)*) ), name: Some($name)
             }
         }
     };
@@ -19,7 +26,7 @@ macro_rules! seq {
         crate::matchers::MatchSequences {
             seq: vec!(
                 crate::repeat::Repeat {
-                    elmt: crate::matchers::MatchValues { values: None }, 
+                    elmt: crate::matchers::MatchValues { values: None, name: None }, 
                     range: crate::repeat::RepeatRange::from(..)
                 }
             )

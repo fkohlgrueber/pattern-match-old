@@ -10,7 +10,7 @@ impl IsMatch<ast::TyKind> for Ty {
                 i.is_match(&vals.iter().collect::<Vec<_>>().as_slice())
             },
             (Ty::Ptr(ity, imut), ast::TyKind::Ptr(jmutty)) => {
-                ity.is_match(&jmutty.ty.node).join(&imut.is_match(&jmutty.mutbl))
+                ity.is_match(&jmutty.ty.node).join(imut.is_match(&jmutty.mutbl))
             }
             _ => None,
         }
@@ -23,15 +23,15 @@ impl IsMatch<ast::ExprKind> for Expr {
         match (self, other) {
             (Expr::Lit(i), ast::ExprKind::Lit(j)) => i.is_match(&j.node),
             (Expr::Array(i), ast::ExprKind::Array(j)) => i.is_match(&j.iter().map(|x| &**x).collect::<Vec<_>>().as_slice()),
-            (Expr::Cast(ie, ity), ast::ExprKind::Cast(je, jty)) => ie.is_match(&je.node).join(&ity.is_match(&jty.node)),
+            (Expr::Cast(ie, ity), ast::ExprKind::Cast(je, jty)) => ie.is_match(&je.node).join(ity.is_match(&jty.node)),
             (Expr::If(i_check, i_then, i_else), ast::ExprKind::If(j_check, j_then, j_else)) => 
                 i_check.is_match(&j_check.node)
-                    .join(&i_then.is_match(&j_then.stmts.iter().map(|x| x).collect::<Vec<_>>().as_slice()))
-                    .join(&i_else.is_match(j_else)),
+                    .join(i_then.is_match(&j_then.stmts.iter().map(|x| x).collect::<Vec<_>>().as_slice()))
+                    .join(i_else.is_match(j_else)),
             (Expr::Block(i), ast::ExprKind::Block(j, _label)) => i.is_match(&j.stmts.iter().map(|x| x).collect::<Vec<_>>().as_slice()),
             (Expr::IfLet(i_block, i_else), ast::ExprKind::IfLet(_pattern, _check, j_block, j_else)) => // TODO: also check pattern and expr
                 i_block.is_match(&j_block.stmts.iter().map(|x| x).collect::<Vec<_>>().as_slice())
-                    .join(&i_else.is_match(j_else)),
+                    .join(i_else.is_match(j_else)),
             _ => None,
         }
     }

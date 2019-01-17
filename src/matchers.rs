@@ -1,24 +1,25 @@
 use crate::repeat::Repeat;
 use itertools::Itertools;
 use std::ops::Deref;
+use std::collections::HashMap;
 
 #[derive(Default)]
 pub struct MatchResult {
-
+    pub names: HashMap<String, String>
 }
 
 impl MatchResult {
-    fn update(&mut self, other: &MatchResult) {
-
+    fn update(&mut self, other: MatchResult) {
+        self.names.extend(other.names);
     }
 }
 
 pub trait Join {
-    fn join(self, other: &Option<MatchResult>) -> Option<MatchResult>;
+    fn join(self, other: Option<MatchResult>) -> Option<MatchResult>;
 }
 
 impl Join for Option<MatchResult> {
-    fn join(self, other: &Option<MatchResult>) -> Option<MatchResult> {
+    fn join(self, other: Option<MatchResult>) -> Option<MatchResult> {
         if let Some(mut i) = self {
             if let Some(j) = other {
                 i.update(j);
@@ -44,6 +45,7 @@ impl IsMatchEquality for syntax::ast::Mutability {}
 #[derive(Clone)]
 pub struct MatchValues<T> {
     pub values: Option<Vec<T>>,
+    pub name: Option<String>
 }
 
 
@@ -72,10 +74,16 @@ where T: IsMatch<U>, V: Deref<Target=U> {
 impl<T, U> IsMatch<U> for MatchValues<T>
 where T: IsMatch<U> {
     fn is_match(&self, other: &U) -> Option<MatchResult> {
-        match &self.values {
+        let mut res = match &self.values {
             Some(v) => v.iter().filter_map(|x| x.is_match(other)).next(),
             None => Some(MatchResult::default()),
+        };
+        if let Some(ref mut res) = &mut res {
+            if let Some(name) = &self.name {
+                res.names.insert(name.clone(), format!("info for {}", name.clone()).to_string());
+            }
         }
+        res
     }
 }
 
@@ -99,7 +107,7 @@ where T: IsMatch<U> {
             let mut res = Some(MatchResult::default());
             for (i, v) in vals.iter().enumerate() {
                 res = other.iter().skip(skip).take(*v).fold(res, |r, x| {
-                    r.join(&self.seq[i].elmt.is_match(x))
+                    r.join(self.seq[i].elmt.is_match(x))
                 });
                 if res.is_none() {
                     continue 'outer;
@@ -109,6 +117,23 @@ where T: IsMatch<U> {
             return res;
         }
         
+        None
+    }
+}
+
+pub struct MatchNamed<T> {
+    pub elmt: T,
+    pub ident: String
+}
+
+impl<T, U> IsMatch<U> for MatchNamed<T>
+where T: IsMatch<U> {
+    fn is_match(&self, other: &U) -> Option<MatchResult> {
+        
+        if let Some(mut res) = self.elmt.is_match(&other) {
+            res.names.insert(self.ident.clone(), format!("info for {}", self.ident).to_string());
+            return Some(res);
+        }
         None
     }
 }
