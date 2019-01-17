@@ -69,14 +69,14 @@ impl EarlyLintPass for CollapsibleIf {
             IfLet(seq!(), any!(Some(if_or_if_let_block.clone())))
         );
 
-        if pattern.is_match(expr) {
+        if pattern.is_match(expr).is_some() {
             cx.span_lint(
                 SIMPLE_PATTERN,
                 expr.span,
                 "this if statement can be collapsed",
             );
         }
-        if pattern2.is_match(expr) {
+        if pattern2.is_match(expr).is_some() {
             match &expr.node {
                 syntax::ast::ExprKind::If(_, _, Some(else_)) | syntax::ast::ExprKind::IfLet(_, _, _, Some(else_)) => {
                     cx.span_lint(
@@ -143,7 +143,7 @@ impl EarlyLintPass for SimplePattern {
             ), any!())
         );
 
-        if pattern.is_match(expr) {
+        if pattern.is_match(expr).is_some() {
             cx.span_lint(
                 SIMPLE_PATTERN,
                 expr.span,

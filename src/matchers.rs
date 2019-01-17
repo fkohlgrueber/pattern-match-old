@@ -2,8 +2,35 @@ use crate::repeat::Repeat;
 use itertools::Itertools;
 use std::ops::Deref;
 
+#[derive(Default)]
+pub struct MatchResult {
+
+}
+
+impl MatchResult {
+    fn update(&mut self, other: &MatchResult) {
+
+    }
+}
+
+pub trait Join {
+    fn join(self, other: &Option<MatchResult>) -> Option<MatchResult>;
+}
+
+impl Join for Option<MatchResult> {
+    fn join(self, other: &Option<MatchResult>) -> Option<MatchResult> {
+        if let Some(mut i) = self {
+            if let Some(j) = other {
+                i.update(j);
+                return Some(i);
+            }
+        }
+        None
+    }
+}
+
 pub trait IsMatch<Rhs = Self> {
-    fn is_match(&self, other: &Rhs) -> bool;
+    fn is_match(&self, other: &Rhs) -> Option<MatchResult>;
 }
 
 pub trait IsMatchEquality: PartialEq {}
@@ -22,28 +49,32 @@ pub struct MatchValues<T> {
 
 impl<T> IsMatch<T> for T
 where T: IsMatchEquality {
-    fn is_match(&self, other: &T) -> bool {
-        self == other
+    fn is_match(&self, other: &T) -> Option<MatchResult> {
+        if self == other {
+            Some(MatchResult::default())
+        } else {
+            None
+        }
     }
 }
 
 impl<T, U, V> IsMatch<Option<V>> for Option<T> 
 where T: IsMatch<U>, V: Deref<Target=U> {
-    fn is_match(&self, other: &Option<V>) -> bool {
+    fn is_match(&self, other: &Option<V>) -> Option<MatchResult> {
         match (self, other) {
             (Some(i), Some(j)) => i.is_match(j),
-            (None, None) => true,
-            _ => false
+            (None, None) => Some(MatchResult::default()),
+            _ => None
         }
     }
 }
 
 impl<T, U> IsMatch<U> for MatchValues<T>
 where T: IsMatch<U> {
-    fn is_match(&self, other: &U) -> bool {
+    fn is_match(&self, other: &U) -> Option<MatchResult> {
         match &self.values {
-            Some(v) => v.iter().any(|x| x.is_match(other)),
-            None => true,
+            Some(v) => v.iter().filter_map(|x| x.is_match(other)).next(),
+            None => Some(MatchResult::default()),
         }
     }
 }
@@ -55,7 +86,7 @@ pub struct MatchSequences<T> {
 
 impl<T, U> IsMatch<&[&U]> for MatchSequences<T> 
 where T: IsMatch<U> {
-    fn is_match(&self, other: &&[&U]) -> bool {
+    fn is_match(&self, other: &&[&U]) -> Option<MatchResult> {
         
         let iterators: Vec<_> = self.seq.iter().map(
             |x| x.range.start..x.range.end.unwrap_or_else(|| other.len()+1)
@@ -65,19 +96,23 @@ where T: IsMatch<U> {
 
         'outer: for vals in iterators {
             let mut skip = 0;
+            let mut res = Some(MatchResult::default());
             for (i, v) in vals.iter().enumerate() {
-                if !other.iter().skip(skip).take(*v).all(|x| self.seq[i].elmt.is_match(x)) {
+                res = other.iter().skip(skip).take(*v).fold(res, |r, x| {
+                    r.join(&self.seq[i].elmt.is_match(x))
+                });
+                if res.is_none() {
                     continue 'outer;
                 }
                 skip += v;
             }
-            return true;
+            return res;
         }
         
-        false
+        None
     }
 }
-
+/*
 #[cfg(test)]
 mod tests {
     use super::*;
@@ -127,3 +162,5 @@ mod tests {
         assert!(!m.is_match(&&[&'b', &'c', &'c', &'c'][..]));
     }
 }
+
+*/
