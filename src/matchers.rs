@@ -92,9 +92,9 @@ pub struct MatchSequences<T> {
     pub seq: Vec<Repeat<T>>
 }
 
-impl<T, U> IsMatch<&[&U]> for MatchSequences<T> 
-where T: IsMatch<U> {
-    fn is_match(&self, other: &&[&U]) -> Option<MatchResult> {
+impl<T, U, V, W> IsMatch<V> for MatchSequences<T> 
+where T: IsMatch<U>, V: Deref<Target=[W]>, W: Deref<Target=U> {
+    fn is_match(&self, other: &V) -> Option<MatchResult> {
         
         let iterators: Vec<_> = self.seq.iter().map(
             |x| x.range.start..x.range.end.unwrap_or_else(|| other.len()+1)

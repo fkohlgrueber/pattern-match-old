@@ -23,7 +23,7 @@ impl IsMatch<ast::ExprKind> for Expr {
     fn is_match(&self, other: &ast::ExprKind) -> Option<MatchResult> {
         match (self, other) {
             (Expr::Lit(i), ast::ExprKind::Lit(j)) => i.is_match(&j.node),
-            (Expr::Array(i), ast::ExprKind::Array(j)) => i.is_match_2(j),
+            (Expr::Array(i), ast::ExprKind::Array(j)) => i.is_match(j),
             (Expr::Cast(ie, ity), ast::ExprKind::Cast(je, jty)) => ie.is_match_2(je).join(ity.is_match(&jty.node)),
             (Expr::If(i_check, i_then, i_else), ast::ExprKind::If(j_check, j_then, j_else)) => 
                 i_check.is_match(&j_check.node)
@@ -89,34 +89,6 @@ impl<T, U> IsMatch2<syntax::ptr::P<U>> for T
 where T: IsMatch<U> {
     fn is_match_2(&self, other: &syntax::ptr::P<U>) -> Option<MatchResult> {
         self.is_match(&*other)
-    }
-}
-
-impl<T, U> IsMatch2<Vec<syntax::ptr::P<U>>> for MatchSequences<T>
-where T: IsMatch<U> {
-    fn is_match_2(&self, other: &Vec<syntax::ptr::P<U>>) -> Option<MatchResult> {
-        let iterators: Vec<_> = self.seq.iter().map(
-            |x| x.range.start..x.range.end.unwrap_or_else(|| other.len()+1)
-        ).multi_cartesian_product()
-         .filter(|x| x.iter().sum::<usize>() == other.len())
-         .collect();
-
-        'outer: for vals in iterators {
-            let mut skip = 0;
-            let mut res = Some(MatchResult::default());
-            for (i, v) in vals.iter().enumerate() {
-                res = other.iter().skip(skip).take(*v).fold(res, |r, x| {
-                    r.join(self.seq[i].elmt.is_match(x))
-                });
-                if res.is_none() {
-                    continue 'outer;
-                }
-                skip += v;
-            }
-            return res;
-        }
-        
-        None
     }
 }
 
