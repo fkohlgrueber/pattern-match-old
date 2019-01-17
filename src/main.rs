@@ -39,34 +39,34 @@ impl EarlyLintPass for CollapsibleIf {
         use crate::matchers::IsMatch;
         
         let if_or_if_let = any!(
-            If(any!(), seq!(), any!()),
-            IfLet(seq!(), any!())
+            If(any!(), any!(), any!()),
+            IfLet(any!(), any!())
         );
 
         let if_or_if_let_block = any!(
-            Block(seq!(
+            Block(any!(seq!(
                 any!(
                     Expr(if_or_if_let.clone()),
                     Semi(if_or_if_let)
                 ); 1
-            ))
+            )))
         );
 
         let pattern = any!(
             // If without else clause
-            If(any!(), seq!(
+            If(any!(), any!(seq!(
                 any!(
-                    Expr(any!(If(any!(), seq!(), any!(None)))),
-                    Semi(any!(If(any!(), seq!(), any!(None))))
+                    Expr(any!(If(any!(), any!(), any!(None)))),
+                    Semi(any!(If(any!(), any!(), any!(None))))
                 ); 1
-            ), any!(None))
+            )), any!(None))
         );
 
         let pattern2 = any!(
             // If with else clause
-            If(any!(), seq!(), any!(Some(if_or_if_let_block.clone()))),
+            If(any!(), any!(), any!(Some(if_or_if_let_block.clone()))),
             // IfLet with else clause
-            IfLet(seq!(), any!(Some(if_or_if_let_block.clone())))
+            IfLet(any!(), any!(Some(if_or_if_let_block.clone())))
         );
 
         if pattern.is_match(expr).is_some() {
@@ -123,24 +123,24 @@ impl EarlyLintPass for SimplePattern {
                 )
             ),
             Array(
-                seq!(
+                any!(seq!(
                     any!(Lit(any!(Char(any!('a'))))); ..,
                     any!(Lit(any!(Char(any!('b'))))); 1..=3,
                     any!(Lit(any!(Char(any!('c'))))); 1
-                )
+                ))
             ),
             Cast(
                 any!(
                     Lit(any!(Int(any!(0))))
                 ),
                 any!(
-                    Ptr(any!(Path(seq!(any!("i32".to_string()); 1))), any!(syntax::ast::Mutability::Immutable))
+                    Ptr(any!(Path(any!(seq!(any!("i32".to_string()); 1)))), any!(syntax::ast::Mutability::Immutable))
                 )
             ),
-            If(any!(Lit(any!(Bool(any!(true))))), seq!(
+            If(any!(Lit(any!(Bool(any!(true))))), any!(seq!(
                 any!(Expr(any!(Lit(any!(Int(any!())))))); ..,
                 any!(Semi(any!(Lit(any!(Bool(any!())))))); ..
-            ), any!())
+            )), any!())
         );
 
         if let Some(res) = pattern.is_match(expr) {

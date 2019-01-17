@@ -22,16 +22,6 @@ macro_rules! any {
 
 
 macro_rules! seq {
-    () => {
-        crate::matchers::MatchSequences {
-            seq: vec!(
-                crate::repeat::Repeat {
-                    elmt: crate::matchers::MatchValues { values: None, name: None }, 
-                    range: crate::repeat::RepeatRange::from(..)
-                }
-            )
-        }
-    };
     ( $( $element:expr ; $repeat:expr ) , * ) => {
         {
             let mut v = Vec::new();

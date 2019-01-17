@@ -1,32 +1,35 @@
 use crate::matchers::{MatchSequences, MatchValues};
 
+type Alt<T> = MatchValues<T>;
+type Seq<T> = MatchValues<MatchSequences<MatchValues<T>>>;
+
 #[derive(Clone)]
 pub enum Ty {
-    Ptr(MatchValues<Ty>, MatchValues<syntax::ast::Mutability>),
-    Path(MatchSequences<MatchValues<String>>),
+    Ptr(Alt<Ty>, Alt<syntax::ast::Mutability>),
+    Path(Seq<String>),
 }
 
 #[derive(Clone)]
 pub enum Expr {
-    Lit(MatchValues<Lit>),
-    Array(MatchSequences<MatchValues<Expr>>),
-    Cast(MatchValues<Expr>, MatchValues<Ty>),
-    If(MatchValues<Expr>, Block, MatchValues<Option<MatchValues<Expr>>>),
+    Lit(Alt<Lit>),
+    Array(Seq<Expr>),
+    Cast(Alt<Expr>, Alt<Ty>),
+    If(Alt<Expr>, Block, Alt<Option<Alt<Expr>>>),
     Block(Block),
-    IfLet(Block, MatchValues<Option<MatchValues<Expr>>>)
+    IfLet(Block, Alt<Option<Alt<Expr>>>)
 }
 
 #[derive(Clone)]
 pub enum Lit {
-    Char(MatchValues<char>),
-    Bool(MatchValues<bool>),
-    Int(MatchValues<u128>),
+    Char(Alt<char>),
+    Bool(Alt<bool>),
+    Int(Alt<u128>),
 }
 
-type Block = MatchSequences<MatchValues<Stmt>>;
+type Block = Seq<Stmt>;
 
 #[derive(Clone)]
 pub enum Stmt {
-    Expr(MatchValues<Expr>),
-    Semi(MatchValues<Expr>)
+    Expr(Alt<Expr>),
+    Semi(Alt<Expr>)
 }
