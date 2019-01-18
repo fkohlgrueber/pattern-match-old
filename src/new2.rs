@@ -4,6 +4,7 @@ use std::ops::Deref;
 
 struct Alternative<T>(Vec<T>);  // Empty Vec matches everything
 struct Sequence<T>(Vec<Repeat<T>>);
+struct Optional<T>(Option<T>);
 
 // --------------------------------------------
 
@@ -14,13 +15,18 @@ where T: PatternTreeNode;
 pub struct Seq<T>(Alternative<Sequence<Alternative<T>>>)
 where T: PatternTreeNode;
 
+pub struct Opt<T>(Alternative<Optional<Alternative<T>>>)
+where T: PatternTreeNode;
+
+
 // --------------------------------------------
 
 pub enum Expr {
     Lit(Alt<Lit>),
-    Ray(Seq<Expr>),
     Array(Seq<Expr>),
     Block(Block),
+    If(Alt<Expr>, Block, Opt<Expr>),
+    IfLet(Block, Opt<Expr>)
 }
 
 
@@ -67,6 +73,18 @@ where T: IsMatch<U> {
     }
 }
 
+impl<T, U> IsMatch<Option<U>> for Optional<T> 
+where T: IsMatch<U> {
+    fn is_match(&self, other: &Option<U>) -> bool {
+        if let Some(i) = &self.0 {
+            if let Some(j) = &other {
+                return i.is_match(j);
+            }
+        }
+        false
+    }
+}
+
 impl<T, U> IsMatch<U> for Alt<T>
 where T: PatternTreeNode + IsMatch<U> {
     fn is_match(&self, other: &U) -> bool {
@@ -78,6 +96,13 @@ where T: PatternTreeNode + IsMatch<U> {
 impl<T, U> IsMatch<Vec<U>> for Seq<T>
 where T: PatternTreeNode + IsMatch<U> {
     fn is_match(&self, other: &Vec<U>) -> bool {
+        self.0.is_match(other)
+    }
+}
+
+impl<T, U> IsMatch<Option<U>> for Opt<T>
+where T: PatternTreeNode + IsMatch<U> {
+    fn is_match(&self, other: &Option<U>) -> bool {
         self.0.is_match(other)
     }
 }
@@ -127,6 +152,10 @@ impl IsMatch<ast::ExprKind> for Expr {
             (Expr::Lit(i), ast::ExprKind::Lit(j)) => i.is_match(j),
             (Expr::Array(i), ast::ExprKind::Array(j)) => i.is_match(j),
             (Expr::Block(i), ast::ExprKind::Block(j, _label)) => i.is_match(j),
+            (Expr::If(i_check, i_then, i_else), ast::ExprKind::If(j_check, j_then, j_else)) =>
+                i_check.is_match(j_check) && i_then.is_match(j_then) && i_else.is_match(j_else),
+            (Expr::IfLet(i_block, i_else), ast::ExprKind::IfLet(_pattern, _check, j_block, j_else)) => // TODO: also check pattern and expr
+                i_block.is_match(j_block) && i_else.is_match(j_else),
             _ => false,
         }
     }
@@ -156,7 +185,7 @@ impl IsMatch<ast::Stmt> for Stmt {
     }
 }
 
-impl IsMatch<ast::Block> for Seq<Stmt> {
+impl IsMatch<ast::Block> for Block {
     fn is_match(&self, other: &ast::Block) -> bool {
         self.is_match(&other.stmts)
     }
@@ -176,20 +205,6 @@ where T: PatternTreeNode, T: IsMatch<U> {
         self.is_match(&other.node)
     }
 }
-
-/*
-impl<T> IsMatch<ast::Block> for T 
-where T: IsMatch<Vec<ast::Stmt>> + PatternTreeNode {
-    fn is_match(&self, other: &ast::Block) -> bool {
-        self.is_match(&other.stmts)
-    }
-}
-*/
-
-// --------------------------------------------
-
-
-// --------------------------------------------
 
 // --------------------------------------------
 
