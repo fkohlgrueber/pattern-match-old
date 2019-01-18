@@ -113,20 +113,16 @@ pub trait IsMatch<T> {
     fn is_match(&self, other: &T) -> bool;
 }
 
-impl IsMatch<u128> for u128 {
-    fn is_match(&self, other: &u128) -> bool {
-        self == other
-    }
-}
+pub trait IsMatchEquality: PartialEq {}
 
-impl IsMatch<char> for char {
-    fn is_match(&self, other: &char) -> bool {
-        self == other
-    }
-}
+impl IsMatchEquality for u128 {}
+impl IsMatchEquality for char {}
+impl IsMatchEquality for bool {}
 
-impl IsMatch<bool> for bool {
-    fn is_match(&self, other: &bool) -> bool {
+
+impl<T> IsMatch<T> for T 
+where T: IsMatchEquality {
+    fn is_match(&self, other: &T) -> bool {
         self == other
     }
 }
@@ -149,13 +145,19 @@ impl IsMatch<ast::LitKind> for Lit {
 impl IsMatch<ast::ExprKind> for Expr {
     fn is_match(&self, other: &ast::ExprKind) -> bool {
         match (self, other) {
-            (Expr::Lit(i), ast::ExprKind::Lit(j)) => i.is_match(j),
-            (Expr::Array(i), ast::ExprKind::Array(j)) => i.is_match(j),
-            (Expr::Block(i), ast::ExprKind::Block(j, _label)) => i.is_match(j),
+            (Expr::Lit(i), ast::ExprKind::Lit(j)) => 
+                i.is_match(j),
+            (Expr::Array(i), ast::ExprKind::Array(j)) => 
+                i.is_match(j),
+            (Expr::Block(i), ast::ExprKind::Block(j, _label)) => 
+                i.is_match(j),
             (Expr::If(i_check, i_then, i_else), ast::ExprKind::If(j_check, j_then, j_else)) =>
-                i_check.is_match(j_check) && i_then.is_match(j_then) && i_else.is_match(j_else),
+                i_check.is_match(j_check) && 
+                i_then.is_match(j_then) && 
+                i_else.is_match(j_else),
             (Expr::IfLet(i_block, i_else), ast::ExprKind::IfLet(_pattern, _check, j_block, j_else)) => // TODO: also check pattern and expr
-                i_block.is_match(j_block) && i_else.is_match(j_else),
+                i_block.is_match(j_block) && 
+                i_else.is_match(j_else),
             _ => false,
         }
     }
@@ -203,23 +205,5 @@ impl<T, U> IsMatch<syntax::source_map::Spanned<U>> for T
 where T: PatternTreeNode, T: IsMatch<U> {
     fn is_match(&self, other: &syntax::source_map::Spanned<U>) -> bool {
         self.is_match(&other.node)
-    }
-}
-
-// --------------------------------------------
-
-
-
-#[cfg(test)]
-mod tests {
-    use super::*;
-
-    #[test]
-    fn test() {
-        'c'.is_match(&'c');
-        Alt(Alternative(vec!(1, 2, 3))).is_match(&2);
-        Seq::<u128>(Alternative(vec!())).is_match(&vec!(1, 23));
-
-
     }
 }
