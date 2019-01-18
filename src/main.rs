@@ -16,6 +16,8 @@ mod matchers;
 mod pattern_tree;
 mod repeat;
 mod ast_match;
+mod new4;
+mod new2;
 
 declare_lint! {
     pub COLLAPSIBLE_IF,

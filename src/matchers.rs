@@ -122,6 +122,22 @@ where T: IsMatch<U>, V: Deref<Target=[W]>, W: Deref<Target=U> {
 }
 
 /*
+impl<T, U> IsMatch<syntax::source_map::Spanned<U>> for T
+where T: IsMatch<U> {
+    fn is_match(&self, other: &syntax::source_map::Spanned<U>) -> Option<MatchResult> {
+        self.is_match(&other.node)
+    }
+}
+
+impl<T, U> IsMatch<syntax::ptr::P<U>> for T
+where T: IsMatch<U> {
+    fn is_match(&self, other: &syntax::ptr::P<U>) -> Option<MatchResult> {
+        self.is_match(&*other)
+    }
+}
+*/
+
+/*
 #[cfg(test)]
 mod tests {
     use super::*;
