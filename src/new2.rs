@@ -1,6 +1,6 @@
 #![allow(dead_code)]
 use crate::repeat::Repeat;
-use std::ops::Deref;
+use itertools::Itertools;
 
 struct Alternative<T>(Vec<T>);  // Empty Vec matches everything
 struct Sequence<T>(Vec<Repeat<T>>);
@@ -61,15 +61,31 @@ impl PatternTreeNode for bool {}
 impl<T, U> IsMatch<U> for Alternative<T> 
 where T: IsMatch<U> {
     fn is_match(&self, other: &U) -> bool {
-        self.0.iter().any(|x| x.is_match(other))
+        self.0.is_empty() || self.0.iter().any(|x| x.is_match(other))
     }
 }
 
 impl<T, U> IsMatch<Vec<U>> for Sequence<T> 
 where T: IsMatch<U> {
     fn is_match(&self, other: &Vec<U>) -> bool {
-        self.0.len() == other.len() && 
-        self.0.iter().zip(other.iter()).all(|(x, y)| x.elmt.is_match(y))
+        let iterators: Vec<_> = self.0.iter().map(
+            |x| x.range.start..x.range.end.unwrap_or_else(|| other.len()+1)
+        ).multi_cartesian_product()
+         .filter(|x| x.iter().sum::<usize>() == other.len())
+         .collect();
+
+        'outer: for vals in iterators {
+            let mut skip = 0;
+            for (i, v) in vals.iter().enumerate() {
+                if !other.iter().skip(skip).take(*v).all(|x| self.0[i].elmt.is_match(x)) {
+                    continue 'outer;
+                }
+                skip += v;
+            }
+            return true;
+        }
+        
+        false
     }
 }
 
