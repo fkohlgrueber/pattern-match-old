@@ -37,11 +37,23 @@ impl EarlyLintPass for CollapsibleIf {
         use crate::pattern_tree::Stmt::*;
         use crate::matchers::IsMatch;
         
+        /*
+        let if_or_if_let = pattern!(
+            If(., ., .) | IfLet(., .)
+        )
+        */
         let if_or_if_let: matchers::Alt<pattern_tree::Expr> = any!(
             If(any!(), any!(), any!()),
             IfLet(any!(), any!())
         );
 
+        /*
+        let if_or_if_let_block = pattern!(
+            Block(
+                Expr(if_or_if_let) | Semi(if_or_if_let)
+            )
+        )
+        */
         let if_or_if_let_block: matchers::Opt<pattern_tree::Expr> = any!(opt!(any!(
             Block(any!(seq!(
                 any!(
@@ -51,6 +63,15 @@ impl EarlyLintPass for CollapsibleIf {
             )))))
         );
 
+        /*
+        let pattern = pattern!(
+            If(
+                .,  
+                Expr(If(., ., ()) | Semi(If(., ., ())), 
+                ()
+            )
+        )
+        */
         let pattern: matchers::Alt<pattern_tree::Expr> = any!(
             // If without else clause
             If(any!(), any!(seq!(
@@ -61,6 +82,12 @@ impl EarlyLintPass for CollapsibleIf {
             )), any!(opt!()))
         );
 
+        /*
+        let pattern = pattern!(
+            If(., ., if_or_if_let_block) |
+            IfLet(., if_or_if_let_block)
+        )
+        */
         let pattern2: matchers::Alt<pattern_tree::Expr> = any!(
             // If with else clause
             If(any!(), any!(), if_or_if_let_block.clone()),
@@ -113,6 +140,21 @@ impl EarlyLintPass for SimplePattern {
         use crate::pattern_tree::Stmt::*;
         use crate::matchers::IsMatch;
         
+        /*
+        let pattern = pattern!(
+            Lit(Bool(false)) |
+            Array(
+                Lit(Char('a')) * 
+                Lit(Char('b')) {1,3} 
+                Lit(Char('c'))
+            ) |
+            If(
+                Lit(Bool(true)), 
+                Expr(Lit(Bool(.)))* Semi(Lit(Bool(.)))*, 
+                ()
+            )
+        )
+        */
         let pattern: matchers::Alt<pattern_tree::Expr> = any!(
             Lit(
                 any!(
