@@ -1,5 +1,4 @@
 #![allow(unused_macros)]
-use crate::matchers::{Alternative, Sequence};
 
 
 macro_rules! any {
@@ -25,6 +24,7 @@ macro_rules! seq {
     };
 }
 
+
 macro_rules! opt {
     ( $element:expr ) => {
         crate::matchers::Optional(Some($element))
@@ -34,16 +34,11 @@ macro_rules! opt {
     };
 }
 
+
 #[cfg(test)]
 mod tests {
 
     #[test]
-    fn test_any_allow_all() {
-        //let x = any!(1, 2, 3);
-        //let y = seq!(1; .., 2; 4);
-    }
-
-    #[test]
-    fn test_any_allow_some() {
+    fn test() {
     }
 }

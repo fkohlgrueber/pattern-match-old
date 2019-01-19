@@ -60,12 +60,11 @@ where T: IsMatch<U> {
 impl<T, U> IsMatch<Option<U>> for Optional<T> 
 where T: IsMatch<U> {
     fn is_match(&self, other: &Option<U>) -> bool {
-        if let Some(i) = &self.0 {
-            if let Some(j) = &other {
-                return i.is_match(j);
-            }
+        match (&self.0, &other) {
+            (Some(i), Some(j)) => i.is_match(j),
+            (None, None) => true,
+            _ => false
         }
-        false
     }
 }
 
