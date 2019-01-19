@@ -33,50 +33,49 @@ impl LintPass for CollapsibleIf {
 
 impl EarlyLintPass for CollapsibleIf {
     fn check_expr(&mut self, cx: &EarlyContext, expr: &syntax::ast::Expr) {
-        /*
         use crate::pattern_tree::Expr::*;
         use crate::pattern_tree::Stmt::*;
         use crate::matchers::IsMatch;
         
-        let if_or_if_let = any!(
+        let if_or_if_let: matchers::Alt<pattern_tree::Expr> = any!(
             If(any!(), any!(), any!()),
             IfLet(any!(), any!())
         );
 
-        let if_or_if_let_block = any!(
+        let if_or_if_let_block: matchers::Opt<pattern_tree::Expr> = any!(opt!(any!(
             Block(any!(seq!(
                 any!(
                     Expr(if_or_if_let.clone()),
                     Semi(if_or_if_let)
                 ); 1
-            )))
+            )))))
         );
 
-        let pattern = any!(
+        let pattern: matchers::Alt<pattern_tree::Expr> = any!(
             // If without else clause
             If(any!(), any!(seq!(
                 any!(
-                    Expr(any!(If(any!(), any!(), any!(None)))),
-                    Semi(any!(If(any!(), any!(), any!(None))))
+                    Expr(any!(If(any!(), any!(), any!(opt!())))),
+                    Semi(any!(If(any!(), any!(), any!(opt!()))))
                 ); 1
-            )), any!(None))
+            )), any!(opt!()))
         );
 
-        let pattern2 = any!(
+        let pattern2: matchers::Alt<pattern_tree::Expr> = any!(
             // If with else clause
-            If(any!(), any!(), any!(Some(if_or_if_let_block.clone()))),
+            If(any!(), any!(), if_or_if_let_block.clone()),
             // IfLet with else clause
-            IfLet(any!(), any!(Some(if_or_if_let_block.clone())))
+            IfLet(any!(), if_or_if_let_block)
         );
 
-        if pattern.is_match(expr).is_some() {
+        if pattern.is_match(expr) {
             cx.span_lint(
                 SIMPLE_PATTERN,
                 expr.span,
                 "this if statement can be collapsed",
             );
         }
-        if pattern2.is_match(expr).is_some() {
+        if pattern2.is_match(expr) {
             match &expr.node {
                 syntax::ast::ExprKind::If(_, _, Some(else_)) | syntax::ast::ExprKind::IfLet(_, _, _, Some(else_)) => {
                     cx.span_lint(
@@ -88,7 +87,6 @@ impl EarlyLintPass for CollapsibleIf {
                 _ => ()
             }
         }
-        */
     }
 }
 
@@ -109,17 +107,16 @@ impl LintPass for SimplePattern {
 
 impl EarlyLintPass for SimplePattern {
     fn check_expr(&mut self, cx: &EarlyContext, expr: &syntax::ast::Expr) {
-        /*
+        
         use crate::pattern_tree::Expr::*;
         use crate::pattern_tree::Lit::*;
-        use crate::pattern_tree::Ty::*;
         use crate::pattern_tree::Stmt::*;
         use crate::matchers::IsMatch;
         
-        let pattern = any!(
+        let pattern: matchers::Alt<pattern_tree::Expr> = any!(
             Lit(
                 any!(
-                    Bool(any!(false)) ;"test".to_string()
+                    Bool(any!(false))
                 )
             ),
             Array(
@@ -129,29 +126,20 @@ impl EarlyLintPass for SimplePattern {
                     any!(Lit(any!(Char(any!('c'))))); 1
                 ))
             ),
-            Cast(
-                any!(
-                    Lit(any!(Int(any!(0))))
-                ),
-                any!(
-                    Ptr(any!(Path(any!(seq!(any!("i32".to_string()); 1)))), any!(syntax::ast::Mutability::Immutable))
-                )
-            ),
             If(any!(Lit(any!(Bool(any!(true))))), any!(seq!(
                 any!(Expr(any!(Lit(any!(Int(any!())))))); ..,
                 any!(Semi(any!(Lit(any!(Bool(any!())))))); ..
             )), any!())
         );
 
-        if let Some(res) = pattern.is_match(expr) {
-            //println!("CAPUTRES: {:?}", res.names);
+        if pattern.is_match(expr) {
             cx.span_lint(
                 SIMPLE_PATTERN,
                 expr.span,
                 "This is a match for a simple pattern. Well Done!",
             );
         }
-        */
+        
     }
 }
 

@@ -1,40 +1,36 @@
+#![allow(unused_macros)]
+use crate::matchers::{Alternative, Sequence};
 
 
 macro_rules! any {
     () => {
-        crate::matchers::MatchValues { values: None, name: None }
+        crate::matchers::Alternative(vec!()).into()
     };
     ( $( $element:expr ) , * ) => {
-        {
-            crate::matchers::MatchValues { 
-                values: Some( vec!($($element ,)*) ), name: None
-            }
-        }
-    };
-    ( $( $element:expr ) , * ; $name:expr ) => {
-        {
-            crate::matchers::MatchValues { 
-                values: Some( vec!($($element ,)*) ), name: Some($name)
-            }
-        }
+        crate::matchers::Alternative(vec!( $($element ,)*) ).into()
     };
 }
 
 
 macro_rules! seq {
     ( $( $element:expr ; $repeat:expr ) , * ) => {
-        {
-            let mut v = Vec::new();
-            $(
-                v.push(
-                    crate::repeat::Repeat {
-                        elmt: $element, 
-                        range: crate::repeat::RepeatRange::from($repeat) });
-            )*
-            crate::matchers::MatchSequences {
-                seq: v
-            }
-        }
+        crate::matchers::Sequence(vec!(
+            $( 
+                crate::repeat::Repeat { 
+                    elmt: $element, 
+                    range: crate::repeat::RepeatRange::from($repeat)
+                }
+            ),*
+        ))
+    };
+}
+
+macro_rules! opt {
+    ( $element:expr ) => {
+        crate::matchers::Optional(Some($element))
+    };
+    () => {
+        crate::matchers::Optional(None)
     };
 }
 
@@ -43,13 +39,11 @@ mod tests {
 
     #[test]
     fn test_any_allow_all() {
-        let m: crate::matchers::MatchValues<char> = any!();
-        assert_eq!(m.values, None);
+        //let x = any!(1, 2, 3);
+        //let y = seq!(1; .., 2; 4);
     }
 
     #[test]
     fn test_any_allow_some() {
-        let m = any!('a', 'b');
-        assert_eq!(m.values, Some(vec!('a', 'b')));
     }
 }

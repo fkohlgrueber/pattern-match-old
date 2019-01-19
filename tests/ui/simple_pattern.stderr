@@ -19,12 +19,6 @@ error: This is a match for a simple pattern. Well Done!
    |             ^^^^^^^^^^^^^^^
 
 error: This is a match for a simple pattern. Well Done!
-  --> $DIR/simple_pattern.rs:15:13
-   |
-15 |     let x = 0 as *const i32;    
-   |             ^^^^^^^^^^^^^^^
-
-error: This is a match for a simple pattern. Well Done!
   --> $DIR/simple_pattern.rs:18:13
    |
 18 |       let y = if true {
@@ -43,5 +37,5 @@ error: This is a match for a simple pattern. Well Done!
 25 | |     }
    | |_____^
 
-error: aborting due to 6 previous errors
+error: aborting due to 5 previous errors
 

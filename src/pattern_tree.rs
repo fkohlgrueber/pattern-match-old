@@ -12,6 +12,7 @@ impl PatternTreeNode for char {}
 impl PatternTreeNode for u128 {}
 impl PatternTreeNode for bool {}
 
+#[derive(Clone)]
 pub enum Expr {
     Lit(Alt<Lit>),
     Array(Seq<Expr>),
@@ -20,7 +21,7 @@ pub enum Expr {
     IfLet(Block, Opt<Expr>)
 }
 
-
+#[derive(Clone)]
 pub enum Lit {
     Char(Alt<char>),
     Bool(Alt<bool>),
@@ -29,6 +30,7 @@ pub enum Lit {
 
 pub type Block = Seq<Stmt>;
 
+#[derive(Clone)]
 pub enum Stmt {
     Expr(Alt<Expr>),
     Semi(Alt<Expr>)

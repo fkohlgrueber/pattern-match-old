@@ -19,9 +19,12 @@ where T: IsMatchEquality {
 }
 
 // Basic pattern building blocks 
-pub struct Alternative<T>(Vec<T>);  // Empty Vec matches everything
-pub struct Sequence<T>(Vec<Repeat<T>>);
-pub struct Optional<T>(Option<T>);
+#[derive(Clone)]
+pub struct Alternative<T>(pub Vec<T>);  // Empty Vec matches everything
+#[derive(Clone)]
+pub struct Sequence<T>(pub Vec<Repeat<T>>);
+#[derive(Clone)]
+pub struct Optional<T>(pub Option<T>);
 
 impl<T, U> IsMatch<U> for Alternative<T> 
 where T: IsMatch<U> {
@@ -67,8 +70,11 @@ where T: IsMatch<U> {
 }
 
 // structs that may actually be used in the pattern tree
+#[derive(Clone)]
 pub struct Alt<T>(Alternative<T>) where T: PatternTreeNode;
+#[derive(Clone)]
 pub struct Seq<T>(Alternative<Sequence<Alternative<T>>>) where T: PatternTreeNode;
+#[derive(Clone)]
 pub struct Opt<T>(Alternative<Optional<Alternative<T>>>) where T: PatternTreeNode;
 
 impl<T, U> IsMatch<U> for Alt<T>
@@ -92,3 +98,23 @@ where T: PatternTreeNode + IsMatch<U> {
     }
 }
 
+impl<T> From<Alternative<T>> for Alt<T> 
+where T: PatternTreeNode {
+    fn from(other: Alternative<T>) -> Self {
+        Alt(other)
+    }
+}
+
+impl<T> From<Alternative<Optional<Alternative<T>>>> for Opt<T> 
+where T: PatternTreeNode {
+    fn from(other: Alternative<Optional<Alternative<T>>>) -> Self {
+        Opt(other)
+    }
+}
+
+impl<T> From<Alternative<Sequence<Alternative<T>>>> for Seq<T> 
+where T: PatternTreeNode {
+    fn from(other: Alternative<Sequence<Alternative<T>>>) -> Self {
+        Seq(other)
+    }
+}
