@@ -52,12 +52,4 @@ mod tests {
         let m = any!('a', 'b');
         assert_eq!(m.values, Some(vec!('a', 'b')));
     }
-
-    #[test]
-    fn test_seq_empty() {
-        let m: crate::matchers::MatchSequences<crate::matchers::MatchValues<char>> = seq!();
-        assert_eq!(m.seq.len(), 1);
-        assert_eq!(m.seq[0].elmt.values, None);
-        assert_eq!(m.seq[0].range, crate::repeat::RepeatRange { start: 0, end: None});
-    }
 }

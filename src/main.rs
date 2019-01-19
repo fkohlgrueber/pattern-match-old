@@ -146,7 +146,7 @@ impl EarlyLintPass for SimplePattern {
         );
 
         if let Some(res) = pattern.is_match(expr) {
-            println!("CAPUTRES: {:?}", res.names);
+            //println!("CAPUTRES: {:?}", res.names);
             cx.span_lint(
                 SIMPLE_PATTERN,
                 expr.span,
