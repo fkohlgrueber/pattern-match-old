@@ -71,7 +71,7 @@ impl From<usize> for RepeatRange {
     }
 }
 
-#[derive(Clone, Copy)]
+#[derive(Clone, Copy, Debug)]
 pub struct Repeat<T> {
     pub elmt: T,
     pub range: RepeatRange,

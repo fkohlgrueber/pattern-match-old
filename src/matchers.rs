@@ -1,102 +1,39 @@
 use crate::repeat::Repeat;
+use crate::pattern_tree::PatternTreeNode;
 use itertools::Itertools;
-use std::ops::Deref;
-use std::collections::HashMap;
 
-#[derive(Default)]
-pub struct MatchResult {
-    pub names: HashMap<String, String>
+
+// Main trait for matching
+pub trait IsMatch<T> {
+    fn is_match(&self, other: &T) -> bool;
 }
 
-impl MatchResult {
-    fn update(&mut self, other: MatchResult) {
-        self.names.extend(other.names);
-    }
-}
-
-pub trait Join {
-    fn join(self, other: Option<MatchResult>) -> Option<MatchResult>;
-}
-
-impl Join for Option<MatchResult> {
-    fn join(self, other: Option<MatchResult>) -> Option<MatchResult> {
-        if let Some(mut i) = self {
-            if let Some(j) = other {
-                i.update(j);
-                return Some(i);
-            }
-        }
-        None
-    }
-}
-
-pub trait IsMatch<Rhs = Self> {
-    fn is_match(&self, other: &Rhs) -> Option<MatchResult>;
-}
-
+// Trait for types that can be matched by their equality
 pub trait IsMatchEquality: PartialEq {}
 
-impl IsMatchEquality for char {}
-impl IsMatchEquality for String {}
-impl IsMatchEquality for bool {}
-impl IsMatchEquality for u128 {}
-impl IsMatchEquality for syntax::ast::Mutability {}
-
-#[derive(Clone)]
-pub struct MatchValues<T> {
-    pub values: Option<Vec<T>>,
-    pub name: Option<String>
-}
-
-
-impl<T> IsMatch<T> for T
+impl<T> IsMatch<T> for T 
 where T: IsMatchEquality {
-    fn is_match(&self, other: &T) -> Option<MatchResult> {
-        if self == other {
-            Some(MatchResult::default())
-        } else {
-            None
-        }
+    fn is_match(&self, other: &T) -> bool {
+        self == other
     }
 }
 
-impl<T, U, V> IsMatch<Option<V>> for Option<T> 
-where T: IsMatch<U>, V: Deref<Target=U> {
-    fn is_match(&self, other: &Option<V>) -> Option<MatchResult> {
-        match (self, other) {
-            (Some(i), Some(j)) => i.is_match(j),
-            (None, None) => Some(MatchResult::default()),
-            _ => None
-        }
-    }
-}
+// Basic pattern building blocks 
+pub struct Alternative<T>(Vec<T>);  // Empty Vec matches everything
+pub struct Sequence<T>(Vec<Repeat<T>>);
+pub struct Optional<T>(Option<T>);
 
-impl<T, U> IsMatch<U> for MatchValues<T>
+impl<T, U> IsMatch<U> for Alternative<T> 
 where T: IsMatch<U> {
-    fn is_match(&self, other: &U) -> Option<MatchResult> {
-        let mut res = match &self.values {
-            Some(v) => v.iter().filter_map(|x| x.is_match(other)).next(),
-            None => Some(MatchResult::default()),
-        };
-        if let Some(ref mut res) = &mut res {
-            if let Some(name) = &self.name {
-                res.names.insert(name.clone(), format!("info for {}", name.clone()).to_string());
-            }
-        }
-        res
+    fn is_match(&self, other: &U) -> bool {
+        self.0.is_empty() || self.0.iter().any(|x| x.is_match(other))
     }
 }
 
-#[derive(Clone)]
-pub struct MatchSequences<T> {
-    pub seq: Vec<Repeat<T>>
-}
-
-impl<T, U, V, W> IsMatch<V> for MatchSequences<T> 
-where T: IsMatch<U>, V: Deref<Target=[W]>, W: Deref<Target=U> {
-    fn is_match(&self, other: &V) -> Option<MatchResult> {
-        
-        let iterators: Vec<_> = self.seq.iter().map(
+impl<T, U> IsMatch<Vec<U>> for Sequence<T> 
+where T: IsMatch<U> {
+    fn is_match(&self, other: &Vec<U>) -> bool {
+        let iterators: Vec<_> = self.0.iter().map(
             |x| x.range.start..x.range.end.unwrap_or_else(|| other.len()+1)
         ).multi_cartesian_product()
          .filter(|x| x.iter().sum::<usize>() == other.len())
@@ -104,88 +41,54 @@ where T: IsMatch<U>, V: Deref<Target=[W]>, W: Deref<Target=U> {
 
         'outer: for vals in iterators {
             let mut skip = 0;
-            let mut res = Some(MatchResult::default());
             for (i, v) in vals.iter().enumerate() {
-                res = other.iter().skip(skip).take(*v).fold(res, |r, x| {
-                    r.join(self.seq[i].elmt.is_match(x))
-                });
-                if res.is_none() {
+                if !other.iter().skip(skip).take(*v).all(|x| self.0[i].elmt.is_match(x)) {
                     continue 'outer;
                 }
                 skip += v;
             }
-            return res;
+            return true;
         }
         
-        None
+        false
     }
 }
 
-/*
-impl<T, U> IsMatch<syntax::source_map::Spanned<U>> for T
+impl<T, U> IsMatch<Option<U>> for Optional<T> 
 where T: IsMatch<U> {
-    fn is_match(&self, other: &syntax::source_map::Spanned<U>) -> Option<MatchResult> {
-        self.is_match(&other.node)
+    fn is_match(&self, other: &Option<U>) -> bool {
+        if let Some(i) = &self.0 {
+            if let Some(j) = &other {
+                return i.is_match(j);
+            }
+        }
+        false
     }
 }
 
-impl<T, U> IsMatch<syntax::ptr::P<U>> for T
-where T: IsMatch<U> {
-    fn is_match(&self, other: &syntax::ptr::P<U>) -> Option<MatchResult> {
-        self.is_match(&*other)
-    }
-}
-*/
+// structs that may actually be used in the pattern tree
+pub struct Alt<T>(Alternative<T>) where T: PatternTreeNode;
+pub struct Seq<T>(Alternative<Sequence<Alternative<T>>>) where T: PatternTreeNode;
+pub struct Opt<T>(Alternative<Optional<Alternative<T>>>) where T: PatternTreeNode;
 
-/*
-#[cfg(test)]
-mod tests {
-    use super::*;
-    use crate::repeat::RepeatRange;
-
-    #[test]
-    fn test_primitive() {
-        assert!(true.is_match(&true));
-        assert!(!true.is_match(&false));
-        assert!('a'.is_match(&'a'));
-        assert!(!'a'.is_match(&'b'));
-    }
-
-    #[test]
-    fn test_match_values_empty() {
-        // None matches anything
-        let m = MatchValues::<char> { values: None };
-        assert!(m.is_match(&'a'));
-        assert!(m.is_match(&'b'));
-        assert!(m.is_match(&'c'));
-    }
-
-    #[test]
-    fn test_match_values() {
-        // Some(..) matches specified values
-        let m = MatchValues::<char> { values: Some(vec!('a', 'b')) };
-        assert!(m.is_match(&'a'));
-        assert!(m.is_match(&'b'));
-        assert!(!m.is_match(&'c'));
-    }
-
-    #[test]
-    fn test_match_sequences() {
-        let m = MatchSequences::<char> { seq: vec!(
-            Repeat { elmt: 'a', range: RepeatRange { start: 0, end: None } },
-            Repeat { elmt: 'b', range: RepeatRange { start: 1, end: Some(2) } },
-            Repeat { elmt: 'c', range: RepeatRange { start: 1, end: Some(3) } },
-        ) };
-        assert!(m.is_match(&&[&'b', &'c'][..]));
-        assert!(m.is_match(&&[&'a', &'b', &'c'][..]));
-        assert!(m.is_match(&&[&'a', &'a', &'b', &'c'][..]));
-        assert!(m.is_match(&&[&'a', &'a', &'b', &'c', &'c'][..]));
-        assert!(m.is_match(&&[&'b', &'c', &'c'][..]));
-        
-        assert!(!m.is_match(&&[&'x', &'b', &'c'][..]));
-        assert!(!m.is_match(&&[&'b', &'c', &'x'][..]));
-        assert!(!m.is_match(&&[&'b', &'c', &'c', &'c'][..]));
+impl<T, U> IsMatch<U> for Alt<T>
+where T: PatternTreeNode + IsMatch<U> {
+    fn is_match(&self, other: &U) -> bool {
+        self.0.is_match(other)
     }
 }
 
-*/
+impl<T, U> IsMatch<Vec<U>> for Seq<T>
+where T: PatternTreeNode + IsMatch<U> {
+    fn is_match(&self, other: &Vec<U>) -> bool {
+        self.0.is_match(other)
+    }
+}
+
+impl<T, U> IsMatch<Option<U>> for Opt<T>
+where T: PatternTreeNode + IsMatch<U> {
+    fn is_match(&self, other: &Option<U>) -> bool {
+        self.0.is_match(other)
+    }
+}
+

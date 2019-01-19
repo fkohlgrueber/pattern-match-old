@@ -16,8 +16,6 @@ mod matchers;
 mod pattern_tree;
 mod repeat;
 mod ast_match;
-mod new4;
-mod new2;
 
 declare_lint! {
     pub COLLAPSIBLE_IF,
@@ -35,7 +33,7 @@ impl LintPass for CollapsibleIf {
 
 impl EarlyLintPass for CollapsibleIf {
     fn check_expr(&mut self, cx: &EarlyContext, expr: &syntax::ast::Expr) {
-        
+        /*
         use crate::pattern_tree::Expr::*;
         use crate::pattern_tree::Stmt::*;
         use crate::matchers::IsMatch;
@@ -90,7 +88,7 @@ impl EarlyLintPass for CollapsibleIf {
                 _ => ()
             }
         }
-        
+        */
     }
 }
 
@@ -111,7 +109,7 @@ impl LintPass for SimplePattern {
 
 impl EarlyLintPass for SimplePattern {
     fn check_expr(&mut self, cx: &EarlyContext, expr: &syntax::ast::Expr) {
-        
+        /*
         use crate::pattern_tree::Expr::*;
         use crate::pattern_tree::Lit::*;
         use crate::pattern_tree::Ty::*;
@@ -153,6 +151,7 @@ impl EarlyLintPass for SimplePattern {
                 "This is a match for a simple pattern. Well Done!",
             );
         }
+        */
     }
 }
 

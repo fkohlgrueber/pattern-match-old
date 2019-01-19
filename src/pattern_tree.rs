@@ -1,35 +1,40 @@
-use crate::matchers::{MatchSequences, MatchValues};
+use crate::matchers::*;
 
-type Alt<T> = MatchValues<T>;
-type Seq<T> = MatchValues<MatchSequences<MatchValues<T>>>;
+// Trait that has to be implemented on all types that can be used in a pattern tree
+pub trait PatternTreeNode {}
 
-#[derive(Clone)]
-pub enum Ty {
-    Ptr(Alt<Ty>, Alt<syntax::ast::Mutability>),
-    Path(Seq<String>),
-}
+impl PatternTreeNode for Expr {}
+impl PatternTreeNode for Lit {}
+impl PatternTreeNode for Block {}
+impl PatternTreeNode for Stmt {}
 
-#[derive(Clone)]
+impl PatternTreeNode for char {}
+impl PatternTreeNode for u128 {}
+impl PatternTreeNode for bool {}
+
 pub enum Expr {
     Lit(Alt<Lit>),
     Array(Seq<Expr>),
-    Cast(Alt<Expr>, Alt<Ty>),
-    If(Alt<Expr>, Block, Alt<Option<Alt<Expr>>>),
     Block(Block),
-    IfLet(Block, Alt<Option<Alt<Expr>>>)
+    If(Alt<Expr>, Block, Opt<Expr>),
+    IfLet(Block, Opt<Expr>)
 }
 
-#[derive(Clone)]
+
 pub enum Lit {
     Char(Alt<char>),
     Bool(Alt<bool>),
     Int(Alt<u128>),
 }
 
-type Block = Seq<Stmt>;
+pub type Block = Seq<Stmt>;
 
-#[derive(Clone)]
 pub enum Stmt {
     Expr(Alt<Expr>),
     Semi(Alt<Expr>)
 }
+
+impl IsMatchEquality for u128 {}
+impl IsMatchEquality for char {}
+impl IsMatchEquality for bool {}
+
