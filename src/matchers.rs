@@ -33,14 +33,13 @@ where T: IsMatch<U> {
     }
 }
 
-impl<T, U> IsMatch<Vec<U>> for Sequence<T> 
+impl<T, U> IsMatch<&[U]> for Sequence<T> 
 where T: IsMatch<U> {
-    fn is_match(&self, other: &Vec<U>) -> bool {
-        let iterators: Vec<_> = self.0.iter().map(
+    fn is_match(&self, other: &&[U]) -> bool {
+        let iterators = self.0.iter().map(
             |x| x.range.start..x.range.end.unwrap_or_else(|| other.len()+1)
         ).multi_cartesian_product()
-         .filter(|x| x.iter().sum::<usize>() == other.len())
-         .collect();
+         .filter(|x| x.iter().sum::<usize>() == other.len());
 
         'outer: for vals in iterators {
             let mut skip = 0;
@@ -86,7 +85,7 @@ where T: PatternTreeNode + IsMatch<U> {
 impl<T, U> IsMatch<Vec<U>> for Seq<T>
 where T: PatternTreeNode + IsMatch<U> {
     fn is_match(&self, other: &Vec<U>) -> bool {
-        self.0.is_match(other)
+        self.0.is_match(&other.as_slice())
     }
 }
 
