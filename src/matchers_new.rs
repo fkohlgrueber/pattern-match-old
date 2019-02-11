@@ -1,3 +1,7 @@
+
+use itertools::Itertools;
+use itertools::repeat_n;
+
 use crate::matchers::IsMatch;
 use crate::pattern_tree_old::PatternTreeNode;
 
@@ -18,35 +22,59 @@ where T: PatternTreeNode + IsMatch<U> {
 impl<T, U> IsMatch<&[U]> for Seq<T> 
 where T: PatternTreeNode + IsMatch<U> {
     fn is_match(&self, other: &&[U]) -> bool {
-        /*
+        
         match self {
-            Seq::Any => true,
-            Seq::Elmt(e) => e.is_match(other),
+            Seq::Any => other.len() == 1,
+            Seq::Elmt(e) => other.len() == 1 && e.is_match(&other[0]),
             Seq::Named(e, _) => e.is_match(other),
             Seq::Alt(a, b) => a.is_match(other) || b.is_match(other),
             Seq::Empty => other.is_empty(),
-        }
-        */
+            Seq::Repeat(e, r) => {
+                let e_range = e.num_elmts_range();
+                let e_range = e_range.start..e_range.end.unwrap_or(other.len()+1);
 
-        false
-
-        /*
-        let iterators = self.0.iter().map(
-            |x| x.range.start..x.range.end.unwrap_or_else(|| other.len()+1)
-        ).multi_cartesian_product()
-         .filter(|x| x.iter().sum::<usize>() == other.len());
-
-        'outer: for vals in iterators {
-            let mut skip = 0;
-            for (i, v) in vals.iter().enumerate() {
-                if !other.iter().skip(skip).take(*v).all(|x| self.0[i].elmt.is_match(x)) {
-                    continue 'outer;
+                if r.start == 0 && other.is_empty() {
+                    return true;
                 }
-                skip += v;
-            }
-            return true;
+
+                for i in r.start..r.end.unwrap_or(other.len()+1) {
+                    
+                    let iterators = repeat_n(e_range.clone(), i)
+                        .multi_cartesian_product()
+                        .filter(|x| x.iter().sum::<usize>() == other.len());
+
+                    'outer: for vals in iterators {
+                        let mut skip = 0;
+                        for v in vals.iter() {
+                            
+                            if !e.is_match(&&other[skip..skip+v]) {
+                                continue 'outer;
+                            }
+                            skip += v;
+                        }
+                        return true;
+                    }
+                }
+
+                false
+            },
+            Seq::Seq(a, b) => {
+                let range = a.num_elmts_range();
+                println!("Expression {}", other.len());
+                for i in range.start..range.end.unwrap_or(other.len()+1) {
+                    println!("I: {}", i);
+                    if i > other.len() {
+                        break;
+                    }
+                    let (l, r) = other.split_at(i);
+                    if a.is_match(&l) && b.is_match(&r) {
+                        return true;
+                    }
+                }
+                false
+            },
+            
         }
-        */
     }
 }
 

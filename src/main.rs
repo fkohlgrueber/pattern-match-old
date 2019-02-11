@@ -206,9 +206,16 @@ impl LintPass for SimplePattern2 {
     }
 }
 
+use pattern_tree::matchers::Alt;
+
 pattern!(
-    PAT: pattern_tree::Expr = 
-        Lit(Int(100|101))
+    PAT: Alt<pattern_tree::Expr> = 
+        Lit(Bool(false)) |
+        Array(
+            Lit(Char('a')) * 
+            Lit(Char('b')) {1,3} 
+            Lit(Char('c'))
+        )
 );
 
 
