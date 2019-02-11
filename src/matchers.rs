@@ -1,5 +1,5 @@
 use crate::repeat::Repeat;
-use crate::pattern_tree::PatternTreeNode;
+use crate::pattern_tree_old::PatternTreeNode;
 use itertools::Itertools;
 
 

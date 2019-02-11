@@ -1,4 +1,4 @@
-use crate::pattern_tree::*;
+use crate::pattern_tree_old::*;
 use crate::matchers::IsMatch;
 use syntax::ast;
 
