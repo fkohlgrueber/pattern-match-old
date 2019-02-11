@@ -13,8 +13,6 @@ use rustc_driver::driver;
 use pattern::pattern;
 use lazy_static::lazy_static;
 
-#[macro_use]
-mod macros;
 mod matchers;
 mod matchers_new;
 mod pattern_tree_old;

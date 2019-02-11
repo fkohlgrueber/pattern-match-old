@@ -58,16 +58,15 @@ impl IsMatch<ast::Stmt> for Stmt {
     }
 }
 
-impl IsMatch<ast::Block> for Block {
+impl IsMatch<ast::Block> for Seq<Stmt> {
     fn is_match(&self, other: &ast::Block) -> bool {
         self.is_match(&other.stmts)
     }
 }
 
 use pattern_tree::matchers::Seq;
-type Block = Seq<Stmt>;
 
 impl PatternTreeNode for Lit {}
 impl PatternTreeNode for Expr {}
 impl PatternTreeNode for Stmt {}
-impl PatternTreeNode for Block {}
+impl PatternTreeNode for Seq<Stmt> {}
