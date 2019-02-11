@@ -50,8 +50,8 @@ impl EarlyLintPass for CollapsibleIf {
         /*
         let if_or_if_let_block = pattern!(
             Block(
-                Expr(if_or_if_let) | Semi(if_or_if_let)
-            )
+                Expr(if_or_if_let#else_) | Semi(if_or_if_let#else_)
+            )#block
         )
         */
         let if_or_if_let_block: matchers::Opt<pattern_tree::Expr> = any!(opt!(any!(
@@ -66,8 +66,10 @@ impl EarlyLintPass for CollapsibleIf {
         /*
         let pattern = pattern!(
             If(
-                .,  
-                Expr(If(., ., ()) | Semi(If(., ., ())), 
+                _#check,
+                ( Expr( If(_#check_inner, _#content, ())#inner )
+                | Semi( If(_#check_inner, _#content, ())#inner ) 
+                )#then, 
                 ()
             )
         )
