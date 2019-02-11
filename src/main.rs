@@ -14,7 +14,6 @@ use pattern::pattern;
 use lazy_static::lazy_static;
 
 mod matchers;
-mod matchers_new;
 mod pattern_tree_old;
 mod repeat;
 mod ast_match;
