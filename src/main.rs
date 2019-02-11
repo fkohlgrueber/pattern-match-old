@@ -16,9 +16,13 @@ use lazy_static::lazy_static;
 #[macro_use]
 mod macros;
 mod matchers;
+mod matchers_new;
 mod pattern_tree_old;
 mod repeat;
 mod ast_match;
+mod ast_match_new;
+
+use crate::matchers::IsMatch;
 
 declare_lint! {
     pub COLLAPSIBLE_IF,
@@ -38,7 +42,6 @@ impl EarlyLintPass for CollapsibleIf {
     fn check_expr(&mut self, cx: &EarlyContext, expr: &syntax::ast::Expr) {
         use crate::pattern_tree_old::Expr::*;
         use crate::pattern_tree_old::Stmt::*;
-        use crate::matchers::IsMatch;
         
         /*
         let if_or_if_let = pattern!(
@@ -143,7 +146,6 @@ impl EarlyLintPass for SimplePattern {
         use crate::pattern_tree_old::Expr::*;
         use crate::pattern_tree_old::Lit::*;
         use crate::pattern_tree_old::Stmt::*;
-        use crate::matchers::IsMatch;
         
         /*
         let pattern = pattern!(
@@ -206,24 +208,20 @@ impl LintPass for SimplePattern2 {
 
 pattern!(
     PAT: pattern_tree::Expr = 
-        Array(
-            Array(_) | Test(_)#test | Lit(Bool(_) | Int(_) | Char(_)) |
-            Array( Array(()) Lit(Bool(_)){1, 2} Test(_?))
-        )
+        Lit(Int(100|101))
 );
 
 
 impl EarlyLintPass for SimplePattern2 {
     fn check_expr(&mut self, cx: &EarlyContext, expr: &syntax::ast::Expr) {
 
-        if false {//PAT.is_match(expr) {
+        if PAT.is_match(expr) {
             cx.span_lint(
                 SIMPLE_PATTERN_2,
                 expr.span,
                 "This is a match for a simple pattern (2). Well Done!",
             );
         }
-        
     }
 }
 

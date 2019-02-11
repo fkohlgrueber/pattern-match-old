@@ -1,0 +1,16 @@
+error: This is a match for a simple pattern (2). Well Done!
+ --> $DIR/simple_pattern_2.rs:7:5
+  |
+7 |     100;
+  |     ^^^
+  |
+  = note: #[forbid(simple_pattern_2)] on by default
+
+error: This is a match for a simple pattern (2). Well Done!
+ --> $DIR/simple_pattern_2.rs:9:5
+  |
+9 |     101;
+  |     ^^^
+
+error: aborting due to 2 previous errors
+
