@@ -60,9 +60,7 @@ where T: PatternTreeNode + IsMatch<U> {
             },
             Seq::Seq(a, b) => {
                 let range = a.num_elmts_range();
-                println!("Expression {}", other.len());
                 for i in range.start..range.end.unwrap_or(other.len()+1) {
-                    println!("I: {}", i);
                     if i > other.len() {
                         break;
                     }
@@ -82,5 +80,23 @@ impl<T, U> IsMatch<Vec<U>> for Seq<T>
 where T: PatternTreeNode + IsMatch<U> {
     fn is_match(&self, other: &Vec<U>) -> bool {
         self.is_match(&other.as_slice())
+    }
+}
+
+
+impl<T, U> IsMatch<Option<U>> for Opt<T> 
+where T: PatternTreeNode + IsMatch<U> {
+    fn is_match(&self, other: &Option<U>) -> bool {
+        
+        match self {
+            Opt::Any => other.is_some(),
+            Opt::Elmt(e) => match other {
+                Some(other) => e.is_match(other),
+                None => false
+            },
+            Opt::Named(e, _) => e.is_match(other),
+            Opt::Alt(a, b) => a.is_match(other) || b.is_match(other),
+            Opt::None => other.is_none(),
+        }
     }
 }

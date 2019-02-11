@@ -140,48 +140,27 @@ impl LintPass for SimplePattern {
     }
 }
 
+use pattern_tree::matchers::Alt;
+
+pattern!(
+    PAT_SIMPLE: Alt<pattern_tree::Expr> = 
+        Lit(Bool(false)) |
+        Array(
+            Lit(Char('a')) * 
+            Lit(Char('b')) {1,3} 
+            Lit(Char('c'))
+        ) |
+        If(
+            Lit(Bool(true)), 
+            Expr(Lit(Int(_)))* Semi(Lit(Bool(_)))*, 
+            _?
+        )
+);
+
 impl EarlyLintPass for SimplePattern {
     fn check_expr(&mut self, cx: &EarlyContext, expr: &syntax::ast::Expr) {
         
-        use crate::pattern_tree_old::Expr::*;
-        use crate::pattern_tree_old::Lit::*;
-        use crate::pattern_tree_old::Stmt::*;
-        
-        /*
-        let pattern = pattern!(
-            Lit(Bool(false)) |
-            Array(
-                Lit(Char('a')) * 
-                Lit(Char('b')) {1,3} 
-                Lit(Char('c'))
-            ) |
-            If(
-                Lit(Bool(true)), 
-                Expr(Lit(Bool(.)))* Semi(Lit(Bool(.)))*, 
-                ()
-            )
-        )
-        */
-        let pattern: matchers::Alt<pattern_tree_old::Expr> = any!(
-            Lit(
-                any!(
-                    Bool(any!(false))
-                )
-            ),
-            Array(
-                any!(seq!(
-                    any!(Lit(any!(Char(any!('a'))))); ..,
-                    any!(Lit(any!(Char(any!('b'))))); 1..=3,
-                    any!(Lit(any!(Char(any!('c'))))); 1
-                ))
-            ),
-            If(any!(Lit(any!(Bool(any!(true))))), any!(seq!(
-                any!(Expr(any!(Lit(any!(Int(any!())))))); ..,
-                any!(Semi(any!(Lit(any!(Bool(any!())))))); ..
-            )), any!())
-        );
-
-        if pattern.is_match(expr) {
+        if PAT_SIMPLE.is_match(expr) {
             cx.span_lint(
                 SIMPLE_PATTERN,
                 expr.span,
@@ -192,45 +171,6 @@ impl EarlyLintPass for SimplePattern {
     }
 }
 
-declare_lint! {
-    pub SIMPLE_PATTERN_2,
-    Forbid,
-    "simple pattern lint"
-}
-
-pub struct SimplePattern2;
-
-impl LintPass for SimplePattern2 {
-    fn get_lints(&self) -> LintArray {
-        lint_array!(SIMPLE_PATTERN_2)
-    }
-}
-
-use pattern_tree::matchers::Alt;
-
-pattern!(
-    PAT: Alt<pattern_tree::Expr> = 
-        Lit(Bool(false)) |
-        Array(
-            Lit(Char('a')) * 
-            Lit(Char('b')) {1,3} 
-            Lit(Char('c'))
-        )
-);
-
-
-impl EarlyLintPass for SimplePattern2 {
-    fn check_expr(&mut self, cx: &EarlyContext, expr: &syntax::ast::Expr) {
-
-        if PAT.is_match(expr) {
-            cx.span_lint(
-                SIMPLE_PATTERN_2,
-                expr.span,
-                "This is a match for a simple pattern (2). Well Done!",
-            );
-        }
-    }
-}
 
 pub fn main() {
     let args: Vec<_> = std::env::args().collect();
@@ -240,7 +180,6 @@ pub fn main() {
             let mut ls = state.session.lint_store.borrow_mut();
             ls.register_early_pass(None, false, box SimplePattern);
             ls.register_early_pass(None, false, box CollapsibleIf);
-            ls.register_early_pass(None, false, box SimplePattern2);
         });
         rustc_driver::run_compiler(&args, Box::new(compiler), None, None)
     });

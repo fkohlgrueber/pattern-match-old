@@ -21,6 +21,10 @@ impl IsMatch<ast::ExprKind> for Expr {
                 i.is_match(j),
             (Expr::Array(i), ast::ExprKind::Array(j)) => 
                 i.is_match(j),
+            (Expr::If(i_check, i_then, i_else), ast::ExprKind::If(j_check, j_then, j_else)) =>
+                i_check.is_match(j_check) && 
+                i_then.is_match(j_then) && 
+                i_else.is_match(j_else),
             _ => false,
         }
     }
@@ -32,6 +36,32 @@ impl IsMatch<ast::Expr> for Expr {
     }
 }
 
+impl IsMatch<ast::StmtKind> for Stmt {
+    fn is_match(&self, other: &ast::StmtKind) -> bool {
+        match (self, other) {
+            (Stmt::Expr(i), ast::StmtKind::Expr(j)) => i.is_match(j),
+            (Stmt::Semi(i), ast::StmtKind::Semi(j)) => i.is_match(j),
+            _ => false,
+        }
+    }
+}
+
+impl IsMatch<ast::Stmt> for Stmt {
+    fn is_match(&self, other: &ast::Stmt) -> bool {
+        self.is_match(&other.node)
+    }
+}
+
+impl IsMatch<ast::Block> for Block {
+    fn is_match(&self, other: &ast::Block) -> bool {
+        self.is_match(&other.stmts)
+    }
+}
+
+use pattern_tree::matchers::Seq;
+type Block = Seq<Stmt>;
 
 impl PatternTreeNode for Lit {}
 impl PatternTreeNode for Expr {}
+impl PatternTreeNode for Stmt {}
+impl PatternTreeNode for Block {}
