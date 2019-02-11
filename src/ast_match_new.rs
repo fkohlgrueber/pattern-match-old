@@ -19,11 +19,17 @@ impl IsMatch<ast::ExprKind> for Expr {
         match (self, other) {
             (Expr::Lit(i), ast::ExprKind::Lit(j)) => 
                 i.is_match(j),
+            (Expr::Block(i), ast::ExprKind::Block(j, _label)) => 
+                i.is_match(j),
             (Expr::Array(i), ast::ExprKind::Array(j)) => 
                 i.is_match(j),
             (Expr::If(i_check, i_then, i_else), ast::ExprKind::If(j_check, j_then, j_else)) =>
                 i_check.is_match(j_check) && 
                 i_then.is_match(j_then) && 
+                i_else.is_match(j_else),
+            (Expr::IfLet(i_block, i_else), ast::ExprKind::IfLet(_pattern, _check, j_block, j_else)) => 
+                // TODO: also check pattern and expr
+                i_block.is_match(j_block) && 
                 i_else.is_match(j_else),
             _ => false,
         }
