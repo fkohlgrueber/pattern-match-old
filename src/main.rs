@@ -14,10 +14,7 @@ use pattern::pattern;
 use lazy_static::lazy_static;
 
 mod matchers;
-mod pattern_tree_old;
-mod repeat;
 mod ast_match;
-mod ast_match_new;
 
 use crate::matchers::IsMatch;
 
