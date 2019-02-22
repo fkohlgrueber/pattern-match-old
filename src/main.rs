@@ -16,6 +16,8 @@ use lazy_static::lazy_static;
 mod matchers;
 mod ast_match;
 
+use crate::ast_match::Ast;
+
 use crate::matchers::IsMatch;
 
 declare_lint! {
@@ -32,18 +34,8 @@ impl LintPass for CollapsibleIf {
     }
 }
 
-#[derive(Debug, Default)]
-pub struct PAT_IF_WITHOUT_ELSE_Res<'o, A>
-where A: pattern_tree::MatchAssociations {
-    check: Option<&'o A::Expr>,
-    check_inner: Option<&'o A::Expr>,
-    content: Option<&'o A::Stmt>,
-    inner: Option<&'o A::Expr>,
-    then: Option<&'o A::Stmt>,
-}
-
 pattern!{
-    PAT_IF_WITHOUT_ELSE: pattern_tree::Expr<'_, '_, PAT_IF_WITHOUT_ELSE_Res<ast_match::Ast>, ast_match::Ast> = 
+    PAT_IF_WITHOUT_ELSE: pattern_tree::Expr = 
         If(
             _#check,
             ( Expr( If(_#check_inner, _#content, ())#inner )
@@ -53,15 +45,8 @@ pattern!{
         )
 }
 
-#[derive(Debug, Default)]
-pub struct PAT_IF_2_Res<'o, A>
-where A: pattern_tree::MatchAssociations {
-    else_: Option<&'o A::Expr>,
-    block: Option<&'o A::Expr>,
-}
-
 pattern!{
-    PAT_IF_2: Alt<'_, '_, pattern_tree::Expr<'_, '_, PAT_IF_2_Res<ast_match::Ast>, ast_match::Ast>, PAT_IF_2_Res<ast_match::Ast>, <ast_match::Ast as pattern_tree::MatchAssociations>::Expr> = 
+    PAT_IF_2: Alt<pattern_tree::Expr> = 
         If(
             _, 
             _, 
@@ -121,14 +106,9 @@ impl LintPass for SimplePattern {
 
 use pattern_tree::matchers::Alt;
 
-#[derive(Debug)]
-struct PAT_SIMPLE_Res<'o, A>
-where A: pattern_tree::MatchAssociations {
-    else_: Option<&'o A::Expr>,
-}
 
 pattern!(
-    PAT_SIMPLE: Alt<'_, '_, pattern_tree::Expr<'_, '_, PAT_SIMPLE_Res<ast_match::Ast>, ast_match::Ast>, PAT_SIMPLE_Res<ast_match::Ast>, <ast_match::Ast as pattern_tree::MatchAssociations>::Expr> = 
+    PAT_SIMPLE: Alt<pattern_tree::Expr> = 
         Lit(Bool(false)) |
         Array(
             Lit(Char('a')) * 
@@ -139,7 +119,7 @@ pattern!(
             Lit(Bool(true)), 
             Expr(Lit(Int(_)))* Semi(Lit(Bool(_)))*, 
             _?
-        )
+        )#var
 );
 
 impl EarlyLintPass for SimplePattern {
