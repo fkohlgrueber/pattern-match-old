@@ -32,8 +32,18 @@ impl LintPass for CollapsibleIf {
     }
 }
 
+#[derive(Debug, Default)]
+pub struct PAT_IF_WITHOUT_ELSE_Res<'o, A>
+where A: pattern_tree::MatchAssociations {
+    check: Option<&'o A::Expr>,
+    check_inner: Option<&'o A::Expr>,
+    content: Option<&'o A::Stmt>,
+    inner: Option<&'o A::Expr>,
+    then: Option<&'o A::Stmt>,
+}
+
 pattern!{
-    PAT_IF_WITHOUT_ELSE: pattern_tree::Expr = 
+    PAT_IF_WITHOUT_ELSE: pattern_tree::Expr<'_, '_, PAT_IF_WITHOUT_ELSE_Res<ast_match::Ast>, ast_match::Ast> = 
         If(
             _#check,
             ( Expr( If(_#check_inner, _#content, ())#inner )
@@ -43,8 +53,15 @@ pattern!{
         )
 }
 
+#[derive(Debug, Default)]
+pub struct PAT_IF_2_Res<'o, A>
+where A: pattern_tree::MatchAssociations {
+    else_: Option<&'o A::Expr>,
+    block: Option<&'o A::Expr>,
+}
+
 pattern!{
-    PAT_IF_2: Alt<pattern_tree::Expr> = 
+    PAT_IF_2: Alt<'_, '_, pattern_tree::Expr<'_, '_, PAT_IF_2_Res<ast_match::Ast>, ast_match::Ast>, PAT_IF_2_Res<ast_match::Ast>, <ast_match::Ast as pattern_tree::MatchAssociations>::Expr> = 
         If(
             _, 
             _, 
@@ -65,14 +82,14 @@ pattern!{
 impl EarlyLintPass for CollapsibleIf {
     fn check_expr(&mut self, cx: &EarlyContext, expr: &syntax::ast::Expr) {
         
-        if PAT_IF_WITHOUT_ELSE.is_match(expr) {
+        if false { //PAT_IF_WITHOUT_ELSE.is_match(expr) {
             cx.span_lint(
                 SIMPLE_PATTERN,
                 expr.span,
                 "this if statement can be collapsed",
             );
         }
-        if PAT_IF_2.is_match(expr) {
+        if false { //PAT_IF_2.is_match(expr) {
             match &expr.node {
                 syntax::ast::ExprKind::If(_, _, Some(else_)) | syntax::ast::ExprKind::IfLet(_, _, _, Some(else_)) => {
                     cx.span_lint(
@@ -104,8 +121,14 @@ impl LintPass for SimplePattern {
 
 use pattern_tree::matchers::Alt;
 
+#[derive(Debug)]
+struct PAT_SIMPLE_Res<'o, A>
+where A: pattern_tree::MatchAssociations {
+    else_: Option<&'o A::Expr>,
+}
+
 pattern!(
-    PAT_SIMPLE: Alt<pattern_tree::Expr> = 
+    PAT_SIMPLE: Alt<'_, '_, pattern_tree::Expr<'_, '_, PAT_SIMPLE_Res<ast_match::Ast>, ast_match::Ast>, PAT_SIMPLE_Res<ast_match::Ast>, <ast_match::Ast as pattern_tree::MatchAssociations>::Expr> = 
         Lit(Bool(false)) |
         Array(
             Lit(Char('a')) * 
@@ -122,7 +145,7 @@ pattern!(
 impl EarlyLintPass for SimplePattern {
     fn check_expr(&mut self, cx: &EarlyContext, expr: &syntax::ast::Expr) {
         
-        if PAT_SIMPLE.is_match(expr) {
+        if false { //PAT_SIMPLE.is_match(expr) {
             cx.span_lint(
                 SIMPLE_PATTERN,
                 expr.span,

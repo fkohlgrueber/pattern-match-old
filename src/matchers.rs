@@ -30,8 +30,7 @@ where T: IsMatchEquality {
     }
 }
 
-
-impl<T, U> IsMatch<U> for Alt<T>
+impl<'cx, 'o, T, U, Cx, O> IsMatch<U> for Alt<'cx, 'o, T, Cx, O>
 where T: PatternTreeNode + IsMatch<U> {
     fn is_match(&self, other: &U) -> bool {
         match self {
@@ -43,7 +42,7 @@ where T: PatternTreeNode + IsMatch<U> {
     }
 }
 
-impl<T, U> IsMatch<&[U]> for Seq<T> 
+impl<'cx, 'o, T, U, Cx, O> IsMatch<&[U]> for Seq<'cx, 'o, T, Cx, O>
 where T: PatternTreeNode + IsMatch<U> {
     fn is_match(&self, other: &&[U]) -> bool {
         
@@ -100,7 +99,7 @@ where T: PatternTreeNode + IsMatch<U> {
     }
 }
 
-impl<T, U> IsMatch<Vec<U>> for Seq<T> 
+impl<'cx, 'o, T, U, Cx, O> IsMatch<Vec<U>> for Seq<'cx, 'o, T, Cx, O>
 where T: PatternTreeNode + IsMatch<U> {
     fn is_match(&self, other: &Vec<U>) -> bool {
         self.is_match(&other.as_slice())
@@ -108,7 +107,7 @@ where T: PatternTreeNode + IsMatch<U> {
 }
 
 
-impl<T, U> IsMatch<Option<U>> for Opt<T> 
+impl<'cx, 'o, T, U, Cx, O> IsMatch<Option<U>> for Opt<'cx, 'o, T, Cx, O>
 where T: PatternTreeNode + IsMatch<U> {
     fn is_match(&self, other: &Option<U>) -> bool {
         

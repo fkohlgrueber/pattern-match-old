@@ -4,7 +4,19 @@ use crate::matchers::IsMatch;
 use crate::matchers::PatternTreeNode;
 use syntax::ast;
 
-impl IsMatch<ast::LitKind> for Lit {
+#[derive(Debug)]
+pub struct Ast {}
+
+impl pattern_tree::MatchAssociations for Ast {
+    type Expr = ast::Expr;
+    type Lit = ast::Lit;
+    type Bool = bool;
+    type Char = char;
+    type Int = u128;
+    type Stmt = ast::Stmt;
+}
+
+impl<'cx, 'o, Cx> IsMatch<ast::LitKind> for Lit<'cx, 'o, Cx, Ast> {
     fn is_match(&self, other: &ast::LitKind) -> bool {
         match (self, other) {
             (Lit::Char(i), ast::LitKind::Char(j)) => i.is_match(j),
@@ -15,7 +27,7 @@ impl IsMatch<ast::LitKind> for Lit {
     }
 }
 
-impl IsMatch<ast::ExprKind> for Expr {
+impl<'cx, 'o, Cx> IsMatch<ast::ExprKind> for Expr<'cx, 'o, Cx, Ast> {
     fn is_match(&self, other: &ast::ExprKind) -> bool {
         match (self, other) {
             (Expr::Lit(i), ast::ExprKind::Lit(j)) => 
@@ -37,13 +49,13 @@ impl IsMatch<ast::ExprKind> for Expr {
     }
 }
 
-impl IsMatch<ast::Expr> for Expr {
+impl<'cx, 'o, Cx> IsMatch<ast::Expr> for Expr<'cx, 'o, Cx, Ast> {
     fn is_match(&self, other: &ast::Expr) -> bool {
         self.is_match(&other.node)
     }
 }
 
-impl IsMatch<ast::StmtKind> for Stmt {
+impl<'cx, 'o, Cx> IsMatch<ast::StmtKind> for Stmt<'cx, 'o, Cx, Ast> {
     fn is_match(&self, other: &ast::StmtKind) -> bool {
         match (self, other) {
             (Stmt::Expr(i), ast::StmtKind::Expr(j)) => i.is_match(j),
@@ -53,13 +65,13 @@ impl IsMatch<ast::StmtKind> for Stmt {
     }
 }
 
-impl IsMatch<ast::Stmt> for Stmt {
+impl<'cx, 'o, Cx> IsMatch<ast::Stmt> for Stmt<'cx, 'o, Cx, Ast> {
     fn is_match(&self, other: &ast::Stmt) -> bool {
         self.is_match(&other.node)
     }
 }
 
-impl IsMatch<ast::Block> for Seq<Stmt> {
+impl<'cx, 'o, Cx, O> IsMatch<ast::Block> for Seq<'cx, 'o, Stmt<'cx, 'o, Cx, Ast>, Cx, O> {
     fn is_match(&self, other: &ast::Block) -> bool {
         self.is_match(&other.stmts)
     }
@@ -79,7 +91,7 @@ where T: PatternTreeNode, T: IsMatch<U> {
     }
 }
 
-impl PatternTreeNode for Lit {}
-impl PatternTreeNode for Expr {}
-impl PatternTreeNode for Stmt {}
-impl PatternTreeNode for Seq<Stmt> {}
+impl<'cx, 'o, Cx, A> PatternTreeNode for Lit<'cx, 'o, Cx, A> where A: pattern_tree::MatchAssociations {}
+impl<'cx, 'o, Cx, A> PatternTreeNode for Expr<'cx, 'o, Cx, A> where A: pattern_tree::MatchAssociations {}
+impl<'cx, 'o, Cx, A> PatternTreeNode for Stmt<'cx, 'o, Cx, A> where A: pattern_tree::MatchAssociations {}
+impl<'cx, 'o, Cx, A, O> PatternTreeNode for Seq<'cx, 'o, Stmt<'cx, 'o, Cx, A>, Cx, O> where A: pattern_tree::MatchAssociations {}
