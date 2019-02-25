@@ -1,6 +1,6 @@
 use pattern_tree::*;
 use pattern_tree::matchers::*;
-use crate::matchers::{IsMatch, IsMatchSeq};
+use crate::matchers::IsMatch;
 use crate::matchers::PatternTreeNode;
 use syntax::ast;
 

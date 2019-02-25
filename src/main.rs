@@ -67,14 +67,26 @@ pattern!{
 impl EarlyLintPass for CollapsibleIf {
     fn check_expr(&mut self, cx: &EarlyContext, expr: &syntax::ast::Expr) {
         
-        if PAT_IF_WITHOUT_ELSE(expr) { //PAT_IF_WITHOUT_ELSE.is_match(expr) {
+        if PAT_IF_WITHOUT_ELSE(expr).is_some() { //PAT_IF_WITHOUT_ELSE.is_match(expr) {
             cx.span_lint(
                 SIMPLE_PATTERN,
                 expr.span,
                 "this if statement can be collapsed",
             );
         }
-        if PAT_IF_2(expr) { //PAT_IF_2.is_match(expr) {
+        /*
+        match PAT_IF_2(expr) {
+            Some(res) => {
+                cx.span_lint(
+                    SIMPLE_PATTERN,
+                    res.else_.unwrap().span,
+                    "this `else { if .. }` block can be collapsed",
+                );
+            },
+            _ => ()
+        };
+        */
+        if PAT_IF_2(expr).is_some() { //PAT_IF_2.is_match(expr) {
             match &expr.node {
                 syntax::ast::ExprKind::If(_, _, Some(else_)) | syntax::ast::ExprKind::IfLet(_, _, _, Some(else_)) => {
                     cx.span_lint(
@@ -125,7 +137,7 @@ pattern!(
 impl EarlyLintPass for SimplePattern {
     fn check_expr(&mut self, cx: &EarlyContext, expr: &syntax::ast::Expr) {
         
-        if PAT_SIMPLE(expr) { //PAT_SIMPLE.is_match(expr) {
+        if PAT_SIMPLE(expr).is_some() { //PAT_SIMPLE.is_match(expr) {
             cx.span_lint(
                 SIMPLE_PATTERN,
                 expr.span,
