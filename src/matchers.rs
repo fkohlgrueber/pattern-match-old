@@ -30,7 +30,7 @@ where T: IsMatchEquality {
     }
 }
 
-impl<'cx, 'o, T, U, Cx, O> IsMatch<'cx, 'o, Cx, U> for Alt<'cx, 'o, T, Cx, O>
+impl<'cx, 'o, T, U, Cx> IsMatch<'cx, 'o, Cx, U> for Alt<'cx, 'o, T, Cx, U>
 where T: PatternTreeNode + IsMatch<'cx, 'o, Cx, U> {
     fn is_match(&self, cx: &'cx mut Cx, other: &'o U) -> (bool, &'cx mut Cx) {
         match self {
@@ -38,9 +38,9 @@ where T: PatternTreeNode + IsMatch<'cx, 'o, Cx, U> {
             Alt::Elmt(e) => e.is_match(cx, other),
             Alt::Named(e, f) => {
                 let (r, mut cx) = e.is_match(cx, other);
-                /*if r {
+                if r {
                     cx = f(cx, other)
-                }*/
+                }
                 (r, cx)
             },
             Alt::Alt(i, j) => {
@@ -142,7 +142,7 @@ where T: PatternTreeNode + IsMatch<'cx, 'o, Cx, U> {
 }
 
 
-impl<'cx, 'o, T, U, Cx, O> IsMatch<'cx, 'o, Cx, Option<U>> for Opt<'cx, 'o, T, Cx, O>
+impl<'cx, 'o, T, U, Cx> IsMatch<'cx, 'o, Cx, Option<U>> for Opt<'cx, 'o, T, Cx, U>
 where T: PatternTreeNode + IsMatch<'cx, 'o, Cx, U> {
     fn is_match(&self, cx: &'cx mut Cx, other: &'o Option<U>) -> (bool, &'cx mut Cx) {
         
@@ -153,10 +153,43 @@ where T: PatternTreeNode + IsMatch<'cx, 'o, Cx, U> {
                 None => (false, cx)
             },
             Opt::Named(e, f) => {
-                let (r, cx) = e.is_match(cx, other);
-                /*if r {
-                    cx = f(cx, other)
-                }*/
+                let (r, mut cx) = e.is_match(cx, other);
+                if r {
+                    if let Some(o) = other {
+                        cx = f(cx, o)
+                    }
+                }
+                (r, cx)
+            },
+            Opt::Alt(a, b) => {
+                let (r_a, cx) = a.is_match(cx, other);
+                let (r_b, cx) = b.is_match(cx, other);
+                (r_a || r_b, cx)
+            },
+            Opt::None => (other.is_none(), cx),
+        }
+    }
+}
+
+
+// TODO: This is ugly!
+impl<'cx, 'o, T, U, Cx> IsMatch<'cx, 'o, Cx, Option<syntax::ptr::P<U>>> for Opt<'cx, 'o, T, Cx, U>
+where T: PatternTreeNode + IsMatch<'cx, 'o, Cx, U> {
+    fn is_match(&self, cx: &'cx mut Cx, other: &'o Option<syntax::ptr::P<U>>) -> (bool, &'cx mut Cx) {
+        
+        match self {
+            Opt::Any => (other.is_some(), cx),
+            Opt::Elmt(e) => match other {
+                Some(other) => e.is_match(cx, other),
+                None => (false, cx)
+            },
+            Opt::Named(e, f) => {
+                let (r, mut cx) = e.is_match(cx, other);
+                if r {
+                    if let Some(o) = other {
+                        cx = f(cx, o)
+                    }
+                }
                 (r, cx)
             },
             Opt::Alt(a, b) => {

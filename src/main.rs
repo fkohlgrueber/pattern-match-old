@@ -74,30 +74,16 @@ impl EarlyLintPass for CollapsibleIf {
                 "this if statement can be collapsed",
             );
         }
-        /*
         match PAT_IF_2(expr) {
             Some(res) => {
                 cx.span_lint(
                     SIMPLE_PATTERN,
-                    res.else_.unwrap().span,
+                    res.block.unwrap().span,
                     "this `else { if .. }` block can be collapsed",
                 );
             },
             _ => ()
         };
-        */
-        if PAT_IF_2(expr).is_some() { //PAT_IF_2.is_match(expr) {
-            match &expr.node {
-                syntax::ast::ExprKind::If(_, _, Some(else_)) | syntax::ast::ExprKind::IfLet(_, _, _, Some(else_)) => {
-                    cx.span_lint(
-                        SIMPLE_PATTERN,
-                        else_.span,
-                        "this `else { if .. }` block can be collapsed",
-                    );
-                },
-                _ => ()
-            }
-        }
     }
 }
 
