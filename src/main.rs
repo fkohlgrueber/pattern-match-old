@@ -38,8 +38,9 @@ pattern!{
     PAT_IF_WITHOUT_ELSE: pattern_tree::Expr = 
         If(
             _#check,
-            ( Expr( If(_#check_inner, _#content, ())#inner )
-            | Semi( If(_#check_inner, _#content, ())#inner ) 
+            Block(
+                Expr( If(_#check_inner, _#content, ())#inner )
+                | Semi( If(_#check_inner, _#content, ())#inner ) 
             )#then, 
             ()
         )
@@ -50,16 +51,20 @@ pattern!{
         If(
             _, 
             _, 
-            Block(
-                Expr((If(_, _, _?) | IfLet(_, _?))#else_) | 
-                Semi((If(_, _, _?) | IfLet(_, _?))#else_)
+            Block_(
+                Block(
+                    Expr((If(_, _, _?) | IfLet(_, _?))#else_) | 
+                    Semi((If(_, _, _?) | IfLet(_, _?))#else_)
+                )
             )#block
         ) |
         IfLet(
             _, 
-            Block(
-                Expr((If(_, _, _?) | IfLet(_, _?))#else_) | 
-                Semi((If(_, _, _?) | IfLet(_, _?))#else_)
+            Block_(
+                Block(
+                    Expr((If(_, _, _?) | IfLet(_, _?))#else_) | 
+                    Semi((If(_, _, _?) | IfLet(_, _?))#else_)
+                )
             )#block
         )
 }
@@ -115,7 +120,7 @@ pattern!(
         ) |
         If(
             Lit(Bool(true)), 
-            Expr(Lit(Int(_)))* Semi(Lit(Bool(_)))*, 
+            Block(Expr(Lit(Int(_)))* Semi(Lit(Bool(_)))*),
             _?
         )#var
 );

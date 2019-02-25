@@ -14,6 +14,7 @@ impl pattern_tree::MatchAssociations for Ast {
     type Char = char;
     type Int = u128;
     type Stmt = ast::Stmt;
+    type BlockType = ast::Block;
 }
 
 impl<'cx, 'o, Cx> IsMatch<'cx, 'o, Cx, ast::LitKind> for Lit<'cx, 'o, Cx, Ast> {
@@ -32,7 +33,7 @@ impl<'cx, 'o, Cx> IsMatch<'cx, 'o, Cx, ast::ExprKind> for Expr<'cx, 'o, Cx, Ast>
         match (self, other) {
             (Expr::Lit(i), ast::ExprKind::Lit(j)) => 
                 i.is_match(cx, j),
-            (Expr::Block(i), ast::ExprKind::Block(j, _label)) => 
+            (Expr::Block_(i), ast::ExprKind::Block(j, _label)) => 
                 i.is_match(cx, j),
             (Expr::Array(i), ast::ExprKind::Array(j)) => 
                 i.is_match(cx, j),
@@ -75,9 +76,11 @@ impl<'cx, 'o, Cx> IsMatch<'cx, 'o, Cx, ast::Stmt> for Stmt<'cx, 'o, Cx, Ast> {
     }
 }
 
-impl<'cx, 'o, Cx, O> IsMatch<'cx, 'o, Cx, ast::Block> for Seq<'cx, 'o, Stmt<'cx, 'o, Cx, Ast>, Cx, O> {
+impl<'cx, 'o, Cx> IsMatch<'cx, 'o, Cx, ast::Block> for BlockType<'cx, 'o, Cx, Ast> {
     fn is_match(&self, cx: &'cx mut Cx, other: &'o ast::Block) -> (bool, &'cx mut Cx) {
-        self.is_match(cx, &other.stmts)
+        match self {
+            BlockType::Block(e) => e.is_match(cx, &other.stmts)
+        }
     }
 }
 
@@ -98,4 +101,4 @@ where T: PatternTreeNode, T: IsMatch<'cx, 'o, Cx, U> {
 impl<'cx, 'o, Cx, A> PatternTreeNode for Lit<'cx, 'o, Cx, A> where A: pattern_tree::MatchAssociations {}
 impl<'cx, 'o, Cx, A> PatternTreeNode for Expr<'cx, 'o, Cx, A> where A: pattern_tree::MatchAssociations {}
 impl<'cx, 'o, Cx, A> PatternTreeNode for Stmt<'cx, 'o, Cx, A> where A: pattern_tree::MatchAssociations {}
-impl<'cx, 'o, Cx, A, O> PatternTreeNode for Seq<'cx, 'o, Stmt<'cx, 'o, Cx, A>, Cx, O> where A: pattern_tree::MatchAssociations {}
+impl<'cx, 'o, Cx, A> PatternTreeNode for BlockType<'cx, 'o, Cx, A> where A: pattern_tree::MatchAssociations {}
