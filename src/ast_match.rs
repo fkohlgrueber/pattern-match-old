@@ -1,6 +1,6 @@
 use pattern_tree::*;
 use pattern_tree::matchers::*;
-use crate::matchers::IsMatch;
+use crate::matchers::{IsMatch, Reduce};
 use crate::matchers::PatternTreeNode;
 use syntax::ast;
 
@@ -84,13 +84,6 @@ impl<'cx, 'o, Cx> IsMatch<'cx, 'o, Cx, ast::Block> for BlockType<'cx, 'o, Cx, As
     }
 }
 
-impl<'cx, 'o, Cx, T, U> IsMatch<'cx, 'o, Cx, syntax::ptr::P<U>> for T 
-where T: PatternTreeNode, T: IsMatch<'cx, 'o, Cx, U> {
-    fn is_match(&self, cx: &'cx mut Cx, other: &'o syntax::ptr::P<U>) -> (bool, &'cx mut Cx) {
-        self.is_match(cx, &*other)
-    }
-}
-
 impl<'cx, 'o, Cx, T, U> IsMatch<'cx, 'o, Cx, syntax::source_map::Spanned<U>> for T 
 where T: PatternTreeNode, T: IsMatch<'cx, 'o, Cx, U> {
     fn is_match(&self, cx: &'cx mut Cx, other: &'o syntax::source_map::Spanned<U>) -> (bool, &'cx mut Cx) {
@@ -102,3 +95,20 @@ impl<'cx, 'o, Cx, A> PatternTreeNode for Lit<'cx, 'o, Cx, A> where A: pattern_tr
 impl<'cx, 'o, Cx, A> PatternTreeNode for Expr<'cx, 'o, Cx, A> where A: pattern_tree::MatchAssociations {}
 impl<'cx, 'o, Cx, A> PatternTreeNode for Stmt<'cx, 'o, Cx, A> where A: pattern_tree::MatchAssociations {}
 impl<'cx, 'o, Cx, A> PatternTreeNode for BlockType<'cx, 'o, Cx, A> where A: pattern_tree::MatchAssociations {}
+
+
+impl Reduce for syntax::ast::Stmt {
+    type Target = syntax::ast::Stmt;
+
+    fn reduce(&self) -> &Self::Target {
+        self
+    }
+}
+
+impl<T> Reduce for syntax::ptr::P<T> {
+    type Target = T;
+
+    fn reduce(&self) -> &Self::Target {
+        &*self
+    }
+}

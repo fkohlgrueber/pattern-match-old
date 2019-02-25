@@ -1,4 +1,4 @@
-
+use std::ops::Deref;
 use itertools::Itertools;
 use itertools::repeat_n;
 
@@ -52,9 +52,18 @@ where T: PatternTreeNode + IsMatch<'cx, 'o, Cx, U> {
     }
 }
 
-impl<'cx, 'o, T, U, Cx, O> IsMatch<'cx, 'o, Cx, [U]> for Seq<'cx, 'o, T, Cx, O>
-where T: PatternTreeNode + IsMatch<'cx, 'o, Cx, U> {
-    fn is_match(&self, cx: &'cx mut Cx, other: &'o [U]) -> (bool, &'cx mut Cx) {
+pub trait Reduce {
+    type Target;
+
+    fn reduce(&self) -> &Self::Target;
+}
+
+impl<'cx, 'o, T, U, V, Cx> IsMatch<'cx, 'o, Cx, [V]> for Seq<'cx, 'o, T, Cx, U>
+where 
+    T: PatternTreeNode + IsMatch<'cx, 'o, Cx, U>,
+    V: Reduce<Target=U>
+{
+    fn is_match(&self, cx: &'cx mut Cx, other: &'o [V]) -> (bool, &'cx mut Cx) {
         let mut cx = cx;
         match self {
             Seq::Any => (other.len() == 1, cx),
@@ -62,16 +71,15 @@ where T: PatternTreeNode + IsMatch<'cx, 'o, Cx, U> {
                 if other.len() != 1 {
                     return (false, cx);
                 }
-                e.is_match(cx, &other[0])
+                e.is_match(cx, &other[0].reduce())
             },
             Seq::Named(e, f) => {
-                let (r, cx) = e.is_match(cx, other);
-                /*
+                let (r, mut cx) = e.is_match(cx, other);
                 if r {
                     for o in other {
-                        cx = f(cx, o)
+                        cx = f(cx, o.reduce())
                     }
-                }*/
+                }
                 (r, cx)
             },
             Seq::Alt(i, j) => {
@@ -134,60 +142,35 @@ where T: PatternTreeNode + IsMatch<'cx, 'o, Cx, U> {
     }
 }
 
-impl<'cx, 'o, T, U, Cx, O> IsMatch<'cx, 'o, Cx, Vec<U>> for Seq<'cx, 'o, T, Cx, O>
-where T: PatternTreeNode + IsMatch<'cx, 'o, Cx, U> {
-    fn is_match(&self, cx: &'cx mut Cx, other: &'o Vec<U>) -> (bool, &'cx mut Cx) {
+impl<'cx, 'o, T, U, V, Cx> IsMatch<'cx, 'o, Cx, Vec<V>> for Seq<'cx, 'o, T, Cx, U>
+where 
+    T: PatternTreeNode + IsMatch<'cx, 'o, Cx, U>,
+    V: Reduce<Target=U>
+{
+    fn is_match(&self, cx: &'cx mut Cx, other: &'o Vec<V>) -> (bool, &'cx mut Cx) {
         self.is_match(cx, &other[..])
     }
 }
 
 
-impl<'cx, 'o, T, U, Cx> IsMatch<'cx, 'o, Cx, Option<U>> for Opt<'cx, 'o, T, Cx, U>
-where T: PatternTreeNode + IsMatch<'cx, 'o, Cx, U> {
-    fn is_match(&self, cx: &'cx mut Cx, other: &'o Option<U>) -> (bool, &'cx mut Cx) {
+impl<'cx, 'o, T, U, V, Cx> IsMatch<'cx, 'o, Cx, Option<V>> for Opt<'cx, 'o, T, Cx, U>
+where 
+    T: PatternTreeNode + IsMatch<'cx, 'o, Cx, U>,
+    V: Reduce<Target=U>
+{
+    fn is_match(&self, cx: &'cx mut Cx, other: &'o Option<V>) -> (bool, &'cx mut Cx) {
         
         match self {
             Opt::Any => (other.is_some(), cx),
             Opt::Elmt(e) => match other {
-                Some(other) => e.is_match(cx, other),
+                Some(other) => e.is_match(cx, other.reduce()),
                 None => (false, cx)
             },
             Opt::Named(e, f) => {
                 let (r, mut cx) = e.is_match(cx, other);
                 if r {
                     if let Some(o) = other {
-                        cx = f(cx, o)
-                    }
-                }
-                (r, cx)
-            },
-            Opt::Alt(a, b) => {
-                let (r_a, cx) = a.is_match(cx, other);
-                let (r_b, cx) = b.is_match(cx, other);
-                (r_a || r_b, cx)
-            },
-            Opt::None => (other.is_none(), cx),
-        }
-    }
-}
-
-
-// TODO: This is ugly!
-impl<'cx, 'o, T, U, Cx> IsMatch<'cx, 'o, Cx, Option<syntax::ptr::P<U>>> for Opt<'cx, 'o, T, Cx, U>
-where T: PatternTreeNode + IsMatch<'cx, 'o, Cx, U> {
-    fn is_match(&self, cx: &'cx mut Cx, other: &'o Option<syntax::ptr::P<U>>) -> (bool, &'cx mut Cx) {
-        
-        match self {
-            Opt::Any => (other.is_some(), cx),
-            Opt::Elmt(e) => match other {
-                Some(other) => e.is_match(cx, other),
-                None => (false, cx)
-            },
-            Opt::Named(e, f) => {
-                let (r, mut cx) = e.is_match(cx, other);
-                if r {
-                    if let Some(o) = other {
-                        cx = f(cx, o)
+                        cx = f(cx, o.reduce())
                     }
                 }
                 (r, cx)
