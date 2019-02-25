@@ -20,6 +20,12 @@ pub trait IsMatch<'cx, 'o, Cx, O> {
     fn is_match(&self, cx: &'cx mut Cx, other: &'o O) -> (bool, &'cx mut Cx);
 }
 
+pub trait IsMatchSeq<'cx, 'o, Cx, O> {
+    fn is_match_seq(&self, cx: &'cx mut Cx, other: &'o [O]) -> (bool, &'cx mut Cx);
+}
+
+
+
 // Trait for types that can be matched by their equality
 pub trait IsMatchEquality: PartialEq {}
 
@@ -46,20 +52,22 @@ where T: PatternTreeNode + IsMatch<'cx, 'o, Cx, U> {
     }
 }
 
-impl<'cx, 'o, T, U, Cx, O> IsMatch<'cx, 'o, Cx, &[U]> for Seq<'cx, 'o, T, Cx, O>
+impl<'cx, 'o, T, U, Cx, O> IsMatchSeq<'cx, 'o, Cx, U> for Seq<'cx, 'o, T, Cx, O>
 where T: PatternTreeNode + IsMatch<'cx, 'o, Cx, U> {
-    fn is_match(&self, cx: &'cx mut Cx, other: &'o &[U]) -> (bool, &'cx mut Cx) {
+    fn is_match_seq(&self, cx: &'cx mut Cx, other: &'o [U]) -> (bool, &'cx mut Cx) {
         let mut cx = cx;
         match self {
             Seq::Any => (other.len() == 1, cx),
             Seq::Elmt(e) => {
-                let (r_e, cx) = e.is_match(cx, &other[0]);
-                (other.len() == 1 && r_e, cx)
+                if other.len() != 1 {
+                    return (false, cx);
+                }
+                e.is_match(cx, &other[0])
             },
-            Seq::Named(e, _) => e.is_match(cx, other),
+            Seq::Named(e, _) => e.is_match_seq(cx, other),
             Seq::Alt(i, j) => {
-                let (r_i, cx) = i.is_match(cx, other);
-                let (r_j, cx) = j.is_match(cx, other);
+                let (r_i, cx) = i.is_match_seq(cx, other);
+                let (r_j, cx) = j.is_match_seq(cx, other);
                 (r_i || r_j, cx)
             },
             Seq::Empty => (other.is_empty(), cx),
@@ -81,7 +89,7 @@ where T: PatternTreeNode + IsMatch<'cx, 'o, Cx, U> {
                         let mut skip = 0;
                         for v in vals.iter() {
                             
-                            let (r_e, cx_tmp) = e.is_match(cx, &&other[skip..skip+v]);
+                            let (r_e, cx_tmp) = e.is_match_seq(cx, &other[skip..skip+v]);
                             cx = cx_tmp;
                             if !r_e {
                                 continue 'outer;
@@ -102,9 +110,9 @@ where T: PatternTreeNode + IsMatch<'cx, 'o, Cx, U> {
                         break;
                     }
                     let (l, r) = other.split_at(i);
-                    let (r_a, cx_tmp) = a.is_match(cx, &l);
+                    let (r_a, cx_tmp) = a.is_match_seq(cx, l);
                     cx = cx_tmp;
-                    let (r_b, cx_tmp) = b.is_match(cx, &r);
+                    let (r_b, cx_tmp) = b.is_match_seq(cx, r);
                     cx = cx_tmp;
                     if r_a && r_b {
                         return (true, cx);
@@ -120,7 +128,7 @@ where T: PatternTreeNode + IsMatch<'cx, 'o, Cx, U> {
 impl<'cx, 'o, T, U, Cx, O> IsMatch<'cx, 'o, Cx, Vec<U>> for Seq<'cx, 'o, T, Cx, O>
 where T: PatternTreeNode + IsMatch<'cx, 'o, Cx, U> {
     fn is_match(&self, cx: &'cx mut Cx, other: &'o Vec<U>) -> (bool, &'cx mut Cx) {
-        self.is_match(cx, &other.as_slice())
+        self.is_match_seq(cx, &other[..])
     }
 }
 
@@ -139,7 +147,7 @@ where T: PatternTreeNode + IsMatch<'cx, 'o, Cx, U> {
             Opt::Alt(a, b) => {
                 let (r_a, cx) = a.is_match(cx, other);
                 let (r_b, cx) = b.is_match(cx, other);
-                (r_a && r_b, cx)
+                (r_a || r_b, cx)
             },
             Opt::None => (other.is_none(), cx),
         }
