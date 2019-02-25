@@ -11,7 +11,6 @@ use rustc::lint::*;
 use rustc_driver::driver;
 
 use pattern::pattern;
-use lazy_static::lazy_static;
 
 mod matchers;
 mod ast_match;
@@ -72,7 +71,7 @@ pattern!{
 impl EarlyLintPass for CollapsibleIf {
     fn check_expr(&mut self, cx: &EarlyContext, expr: &syntax::ast::Expr) {
         
-        if PAT_IF_WITHOUT_ELSE(expr).is_some() { //PAT_IF_WITHOUT_ELSE.is_match(expr) {
+        if PAT_IF_WITHOUT_ELSE(expr).is_some() {
             cx.span_lint(
                 SIMPLE_PATTERN,
                 expr.span,
@@ -128,7 +127,7 @@ pattern!(
 impl EarlyLintPass for SimplePattern {
     fn check_expr(&mut self, cx: &EarlyContext, expr: &syntax::ast::Expr) {
         
-        if PAT_SIMPLE(expr).is_some() { //PAT_SIMPLE.is_match(expr) {
+        if PAT_SIMPLE(expr).is_some() {
             cx.span_lint(
                 SIMPLE_PATTERN,
                 expr.span,
