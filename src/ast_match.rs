@@ -83,9 +83,8 @@ impl<'cx, 'o, Cx> IsMatch<'cx, 'o, Cx, ast::Block> for BlockType<'cx, 'o, Cx, As
     }
 }
 
-impl<'cx, 'o, Cx, T, U> IsMatch<'cx, 'o, Cx, syntax::source_map::Spanned<U>> for T 
-where T: PatternTreeNode, T: IsMatch<'cx, 'o, Cx, U> {
-    fn is_match(&self, cx: &'cx mut Cx, other: &'o syntax::source_map::Spanned<U>) -> (bool, &'cx mut Cx) {
+impl<'cx, 'o, Cx> IsMatch<'cx, 'o, Cx, ast::Lit> for Lit<'cx, 'o, Cx, Ast> {
+    fn is_match(&self, cx: &'cx mut Cx, other: &'o ast::Lit) -> (bool, &'cx mut Cx) {
         self.is_match(cx, &other.node)
     }
 }
