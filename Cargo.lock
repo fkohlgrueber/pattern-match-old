@@ -14,6 +14,15 @@ version = "0.1.6"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 
 [[package]]
+name = "common"
+version = "0.1.0"
+dependencies = [
+ "proc-macro2 0.4.26 (registry+https://github.com/rust-lang/crates.io-index)",
+ "quote 0.6.10 (registry+https://github.com/rust-lang/crates.io-index)",
+ "syn 0.15.23 (registry+https://github.com/rust-lang/crates.io-index)",
+]
+
+[[package]]
 name = "compiletest_rs"
 version = "0.3.17"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -55,6 +64,7 @@ dependencies = [
 name = "gen_pattern_tree"
 version = "0.1.0"
 dependencies = [
+ "common 0.1.0",
  "lazy_static 1.2.0 (registry+https://github.com/rust-lang/crates.io-index)",
  "proc-macro2 0.4.26 (registry+https://github.com/rust-lang/crates.io-index)",
  "quote 0.6.10 (registry+https://github.com/rust-lang/crates.io-index)",
@@ -128,7 +138,8 @@ dependencies = [
 name = "pattern"
 version = "0.1.0"
 dependencies = [
- "pattern_tree 0.1.0",
+ "common 0.1.0",
+ "pattern_match 0.1.0",
  "proc-macro2 0.4.26 (registry+https://github.com/rust-lang/crates.io-index)",
  "quote 0.6.10 (registry+https://github.com/rust-lang/crates.io-index)",
  "syn 0.15.23 (registry+https://github.com/rust-lang/crates.io-index)",
@@ -138,20 +149,22 @@ dependencies = [
 name = "pattern_match"
 version = "0.1.0"
 dependencies = [
+ "common 0.1.0",
+ "gen_pattern_tree 0.1.0",
+ "itertools 0.8.0 (registry+https://github.com/rust-lang/crates.io-index)",
+ "lazy_static 1.2.0 (registry+https://github.com/rust-lang/crates.io-index)",
+]
+
+[[package]]
+name = "pattern_match_test"
+version = "0.1.0"
+dependencies = [
  "compiletest_rs 0.3.17 (registry+https://github.com/rust-lang/crates.io-index)",
  "if_chain 0.1.3 (registry+https://github.com/rust-lang/crates.io-index)",
  "itertools 0.8.0 (registry+https://github.com/rust-lang/crates.io-index)",
  "lazy_static 1.2.0 (registry+https://github.com/rust-lang/crates.io-index)",
  "pattern 0.1.0",
- "pattern_tree 0.1.0",
-]
-
-[[package]]
-name = "pattern_tree"
-version = "0.1.0"
-dependencies = [
- "gen_pattern_tree 0.1.0",
- "lazy_static 1.2.0 (registry+https://github.com/rust-lang/crates.io-index)",
+ "pattern_match 0.1.0",
 ]
 
 [[package]]

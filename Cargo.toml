@@ -1,5 +1,5 @@
 [package]
-name = "pattern_match"
+name = "pattern_match_test"
 version = "0.1.0"
 authors = ["Felix Kohlgrüber <felix.kohlgrueber@gmail.com>"]
 edition = "2018"
@@ -8,7 +8,7 @@ edition = "2018"
 if_chain = "0.1.2"
 itertools = "0.8.0"
 pattern = { path = "../parse-pattern/pattern" }
-pattern_tree = { path = "../parse-pattern/pattern_tree" }
+pattern_match = { path = "../parse-pattern/pattern_match" }
 lazy_static = "1.2.0"
 
 [dev-dependencies]

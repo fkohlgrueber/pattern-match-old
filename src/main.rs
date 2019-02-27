@@ -12,13 +12,6 @@ use rustc_driver::driver;
 
 use pattern::pattern;
 
-mod matchers;
-mod ast_match;
-
-use crate::ast_match::Ast;
-
-use crate::matchers::IsMatch;
-
 declare_lint! {
     pub COLLAPSIBLE_IF,
     Forbid,
@@ -34,7 +27,7 @@ impl LintPass for CollapsibleIf {
 }
 
 pattern!{
-    PAT_IF_WITHOUT_ELSE: pattern_tree::Expr = 
+    PAT_IF_WITHOUT_ELSE: Alt<Expr> = 
         If(
             _#check,
             Block(
@@ -46,7 +39,7 @@ pattern!{
 }
 
 pattern!{
-    PAT_IF_2: Alt<pattern_tree::Expr> = 
+    PAT_IF_2: Alt<Expr> = 
         If(
             _, 
             _, 
@@ -82,7 +75,7 @@ impl EarlyLintPass for CollapsibleIf {
             Some(res) => {
                 cx.span_lint(
                     SIMPLE_PATTERN,
-                    res.block.unwrap().span,
+                    res.block.span,
                     "this `else { if .. }` block can be collapsed",
                 );
             },
@@ -106,11 +99,8 @@ impl LintPass for SimplePattern {
     }
 }
 
-use pattern_tree::matchers::Alt;
-
-
 pattern!(
-    PAT_SIMPLE: Alt<pattern_tree::Expr> = 
+    PAT_SIMPLE: Alt<Expr> = 
         Lit(Bool(false)) |
         Array(
             Lit(Char('a')) * 
