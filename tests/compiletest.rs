@@ -12,7 +12,7 @@ fn run_mode(mode: &'static str) {
         config.link_deps(); // Populate config.target_rustcflags with dependencies on the path
     };
     config.clean_rmeta(); // If your tests import the parent crate, this helps with E0464
-    config.rustc_path = PathBuf::from("target/debug/pattern_match");
+    config.rustc_path = PathBuf::from("target/debug/test-clippy");
 
     std::env::set_var("LINTER_TESTMODE", "1");
     compiletest_rs::run_tests(&config);
