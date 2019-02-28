@@ -27,7 +27,7 @@ impl LintPass for CollapsibleIf {
 }
 
 pattern!{
-    PAT_IF_WITHOUT_ELSE: Alt<Expr> = 
+    PAT_IF_WITHOUT_ELSE: Expr = 
         If(
             _#check,
             Block(
@@ -39,7 +39,7 @@ pattern!{
 }
 
 pattern!{
-    PAT_IF_2: Alt<Expr> = 
+    PAT_IF_2: Expr = 
         If(
             _, 
             _, 
@@ -100,7 +100,7 @@ impl LintPass for SimplePattern {
 }
 
 pattern!(
-    PAT_SIMPLE: Alt<Expr> = 
+    PAT_SIMPLE: Expr = 
         Lit(Bool(false)) |
         Array(
             Lit(Char('a')) * 
