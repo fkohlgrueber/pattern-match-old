@@ -5,11 +5,7 @@ authors = ["Felix Kohlgrüber <felix.kohlgrueber@gmail.com>"]
 edition = "2018"
 
 [dependencies]
-if_chain = "0.1.2"
-itertools = "0.8.0"
 pattern = { path = "../parse-pattern/pattern" }
-pattern_match = { path = "../parse-pattern/pattern_match" }
-lazy_static = "1.2.0"
 
 [dev-dependencies]
 compiletest_rs = "0.3.17"
