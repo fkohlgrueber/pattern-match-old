@@ -141,8 +141,15 @@ dependencies = [
 name = "pattern-match"
 version = "0.1.0"
 dependencies = [
- "common 0.1.0",
  "itertools 0.8.0 (registry+https://github.com/rust-lang/crates.io-index)",
+ "pattern-tree 0.1.0",
+]
+
+[[package]]
+name = "pattern-tree"
+version = "0.1.0"
+dependencies = [
+ "common 0.1.0",
  "lazy_static 1.2.0 (registry+https://github.com/rust-lang/crates.io-index)",
  "pattern-tree-macro 0.1.0",
 ]
