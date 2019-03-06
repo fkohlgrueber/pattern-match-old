@@ -1,21 +1,4 @@
-# Sample project for the static analysis workshop at rustfest Paris (2018)
 
-## Prerequisites
+Syntax tree pattern matching, project based on https://github.com/oli-obk/rustfest2018_workshop.
 
-```bash
-rustup override set nightly-2018-12-21
-```
-
-## Installing the checker
-
-```
-cargo install
-```
-
-## Running the checker
-
-We're changing the target-dir in order to prevent rebuilding when building normally without the checker
-
-```bash
-RUSTC_WRAPPER=rustfest2018_workshop cargo check --target-dir /tmp/checker/`pwd`
-```
+This is an old repository. Work on this topic is continued in [here](https://github.com/fkohlgrueber/pattern-matching/).
